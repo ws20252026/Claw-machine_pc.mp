@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <title>新春刮刮樂 - 文山區公所政風室</title>
+
+    <style>
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #fff; }
+        .container { position: relative; width: 100vw; height: 100vh; }
+        
+        .text-layer { 
+            position: absolute; 
+            width: 100%; 
+            height: 100%; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 1; 
+            background-color: #ffffff; /* 🚩 刮開後的背景維持白色，讓文字清晰 */
+        }
+
+        /* 📝 文字樣式調整區 */
+        #msg { 
+            /* 🚩 換成富有過年氣氛的標楷體 */
+            font-family: "DFKai-SB", "標楷體", serif; 
+            
+            font-size: 7vw;          /* 🚩 調整字體大小 */
+            color: #d63031;          /* 🚩 換成深紅色，喜氣又穩重 */
+            font-weight: bold; 
+            line-height: 1.2; 
+            text-align: center; 
+            margin-bottom: 10px; 
+            order: 1;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1); /* 增加輕微陰影 */
+        }
+
+        .surprise-img { 
+            width: 85vw; 
+            max-width: 500px; 
+            height: auto; 
+            border-radius: 15px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            display: none; 
+            margin-top: 30px;        /* 🚩 調整圖片下移距離 */
+            order: 2;
+        }
+        
+        .signature { 
+            background: #b33939;     /* 🚩 簽名欄也換成紅色調 */
+            color: #ffffff; 
+            padding: 8px 20px; 
+            border-radius: 50px; 
+            font-size: 14px; 
+            font-family: "DFKai-SB", "標楷體", sans-serif; 
+            font-weight: bold; 
+            margin-top: 30px; 
+            order: 3;
+        }
+
+        canvas { position: absolute; top: 0; left: 0; z-index: 100; touch-action: none; cursor: crosshair; }
+        
+        /* 🚩 提示層設定 */
+        #hint-layer { 
+            position: absolute; width: 100%; height: 100%; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            z-index: 200; 
+            pointer-events: none; transition: opacity 0.5s; 
+        }
+        .eraser-icon { font-size: 60px; animation: swipe 1.5s infinite ease-in-out; }
+        .hint-text { 
+            color: #ffda79;          /* 🚩 教學文字換成金色 */
+            font-size: 18px; margin-top: 15px; font-weight: bold; 
+            background: rgba(0,0,0,0.5); /* 增加背景對比 */
+            padding: 8px 20px; border-radius: 25px;
+            font-family: sans-serif;
+        }
+        
+        @keyframes swipe { 0% { transform: translateX(-50px) rotate(-15deg); } 50% { transform: translateX(50px) rotate(15deg); } 100% { transform: translateX(-50px) rotate(-15deg); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="text-layer">
+        <span id="msg">載入中...</span>
+        <img id="pic" class="surprise-img" src="" alt="Surprise">
+        <div class="signature">🏛️ 文山區公所政風室</div>
+    </div>
+    <div id="hint-layer">
+        <div class="eraser-icon">🧼</div>
+        <div class="hint-text">擦除螢幕看驚喜</div>
+    </div>
+    <canvas id="c"></canvas>
+</div>
+
+<script>
+    /**
+     * 🏁 專案簽名：文山區公所政風室自製
+     */
+    const data = [
+        { 
+            text: "新年快樂！<br>廉潔有禮", 
+            img: "https://raw.githubusercontent.com/ws20252026/Lottery-v2-/refs/heads/main/241211_%E6%B3%95%E5%8B%99%E9%83%A8_%E5%8F%8D%E8%A9%90%E9%A8%99_%E5%9C%96_01_%E5%AE%9A%E7%A8%BF.jpg" 
+        },
+        { 
+            text: "維護廉潔<br>你我有責", 
+            img: "https://openclipart.org/download/218635/1432244243.svg" 
+        }
+    ];
+
+    const cvs = document.getElementById('c'), ctx = cvs.getContext('2d');
+    const msg = document.getElementById('msg'), pic = document.getElementById('pic'), hint = document.getElementById('hint-layer');
+    let drawing = false, firstTouch = true;
+
+    function init() {
+        const item = data[Math.floor(Math.random() * data.length)];
+        msg.innerHTML = item.text; 
+        if(item.img && item.img.trim() !== "") { 
+            pic.src = item.img; 
+            pic.style.display = "block"; 
+        }
+
+        cvs.width = window.innerWidth;
+        cvs.height = window.innerHeight;
+        
+        // 🚩 繪製新春刮刮樂塗層
+        ctx.globalCompositeOperation = 'source-over';
+        
+        // ----------------------------------------------------
+        // 🎨 新春設定區
+        // ----------------------------------------------------
+        // 1. 將塗層換成過年大紅色 (#d63031)
+        ctx.fillStyle = '#d63031'; 
+        ctx.fillRect(0, 0, cvs.width, cvs.height);
+        
+        // 2. 🚩 筆刷調整區
+        // ----------------------------------------------------
+        // 🚩 這裡修改擦除筆刷的粗細
+        ctx.lineWidth = 65;      
+
+        // ----------------------------------------------------
+        // 🚩 【 進 階 技 術 】- 加上金箔光澤邊緣
+        // ----------------------------------------------------
+        // 🚩 增加筆刷的發光（金箔）效果
+        ctx.shadowColor = '#f9ca24'; /* 金色發光 */
+        ctx.shadowBlur = 15;         /* 發光範圍，數值越大越顯眼 */
+        
+        // 設定刮除筆觸
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+    }
+
+    function getPos(e) {
+        const cx = e.touches ? e.touches[0].clientX : e.clientX;
+        const cy = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: cx, y: cy };
+    }
+
+    function start(e) {
+        drawing = true;
+        if (firstTouch) { 
+            hint.style.opacity = '0'; 
+            setTimeout(() => hint.style.display = 'none', 500);
+            firstTouch = false; 
+        }
+        ctx.beginPath();
+        const p = getPos(e);
+        ctx.moveTo(p.x, p.y);
+    }
+
+    function move(e) {
+        if (!drawing) return;
+        e.preventDefault();
+        const p = getPos(e);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+    }
+
+    function stop() { drawing = false; }
+    
+    cvs.addEventListener('mousedown', start);
+    cvs.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', stop);
+    cvs.addEventListener('touchstart', start, {passive: false});
+    cvs.addEventListener('touchmove', move, {passive: false});
+    cvs.addEventListener('touchend', stop);
+    
+    window.onload = init;
+</script>
+</body>
+</html>
