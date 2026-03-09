@@ -100,18 +100,15 @@ function restartGame() {
 
 function initGame() {
     itemsArea.innerHTML = '';
-
-    // 【關鍵修改 3】檢查題目是否用完，用完就重來
     if (availableQuestions.length === 0) {
         availableQuestions = [...antiFraudPool];
     }
 
-    // 隨機選一題並從副本移除
     const randomIndex = Math.floor(Math.random() * availableQuestions.length);
     const currentLevel = availableQuestions[randomIndex];
     availableQuestions.splice(randomIndex, 1);
 
-    targetText.innerHTML = currentLevel.q; // 支援 HTML 換行
+    targetText.innerHTML = currentLevel.q;
     currentCorrectAnswer = currentLevel.a;
     
     const placedItems = [];
@@ -121,20 +118,34 @@ function initGame() {
         item.innerText = text;
         itemsArea.appendChild(item);
 
+        // 取得按鈕實際寬度，若尚未渲染則預設為 120px
+        const itemWidth = 120; 
+        const itemHeight = 45;
+
         let randomLeft, randomBottom, attempts = 0;
+        let isOverlapping;
+
         do {
-            randomLeft = Math.floor(Math.random() * (itemsArea.offsetWidth - 100)) + 25;
-            randomBottom = Math.floor(Math.random() * 200) + 40; 
-            let isOverlapping = false;
+            isOverlapping = false;
+            // 限制隨機範圍，確保不會超出邊框
+            randomLeft = Math.floor(Math.random() * (itemsArea.offsetWidth - itemWidth - 40)) + 20;
+            randomBottom = Math.floor(Math.random() * 180) + 50; 
+
+            // 【核心優化】加強重疊判定間距
             for (let other of placedItems) {
-                if (Math.abs(randomLeft - other.left) < 100 && Math.abs(randomBottom - other.bottom) < 50) {
+                const horizontalSpacing = 110; // 左右間距
+                const verticalSpacing = 60;    // 上下間距
+                
+                if (Math.abs(randomLeft - other.left) < horizontalSpacing && 
+                    Math.abs(randomBottom - other.bottom) < verticalSpacing) {
                     isOverlapping = true;
                     break;
                 }
             }
-            if (!isOverlapping || attempts > 50) break;
             attempts++;
-        } while (true);
+            // 嘗試 100 次若還是重疊就強制放置，避免無窮迴圈
+            if (attempts > 100) break; 
+        } while (isOverlapping);
 
         placedItems.push({ left: randomLeft, bottom: randomBottom });
         item.style.left = randomLeft + 'px';
