@@ -1,3 +1,6 @@
+/* =========================================
+   1. 變數與資料設定
+   ========================================= */
 const itemsArea = document.getElementById('items-area');
 const claw = document.getElementById('claw-body');
 const targetText = document.getElementById('target-answer');
@@ -8,19 +11,20 @@ const winOverlay = document.getElementById('win-overlay');
 const finalScoreText = document.getElementById('final-score');
 
 let playerName = "";
-let clawX = 225;
+let clawX = 250;
 let score = 0;
-let timeLeft = 90; 
+let timeLeft = 90; // 統一設定為 90 秒
 let isDropping = false;
 let isGameOver = false;
 let gameTimer = null;
 let currentCorrectAnswer = "";
 let availableQuestions = [];
 
+// 題庫資料 [cite: 40, 41]
 const antiFraudPool = [
     { q: "消費者服務專線的電話是？", options: ["📞 1950", "📞 110", "📞 119", "📞 123"], a: "📞 1950" },
     { q: "以下哪些是常見的詐騙手法？", options: ["💌 網路交友", "📈 假投資", "✅ 以上皆是", "🎁 領點數"], a: "✅ 以上皆是" },
-    { q: "收到自稱檢察官電話說要監管帳戶？", options: ["☎️ 撥打 165", "💰 匯款給他", "🏦 操作 ATM], a: "☎️ 撥打 165" },
+    { q: "收到自稱檢察官電話說要監管帳戶？", options: ["☎️ 撥打 165", "💰 匯款給他", "🏦 操作 ATM"], a: "☎️ 撥打 165" },
     { q: "賄選檢舉專線為", options: ["📞 0800-024-099#4", "📞 113", "📞 2882-5252", "📞 119"], a: "📞 0800-024-099#4" },
     { q: "公務員赴大陸事後返臺上班多久內應填寫「返臺通報表」？", options: ["一星期內", "不用填(ﾟ∀。)", "一年後", "一年內"], a: "一星期內" },
     { q: "透明晶質獎的執行機關是？", options: ["廉政署", "數發部", "文山區公所", "體育部"], a: "廉政署" },
@@ -30,10 +34,135 @@ const antiFraudPool = [
     { q: "公益揭弊者保護法的「揭弊的人」保護對象為？", options: ["政府機關（構）", "國營事業", "受政府控制之事業團體", "以上皆是"], a: "以上皆是" }
 ];
 
-// 核心動作函式
+/* =========================================
+   2. 遊戲核心邏輯 (初始化與計時)
+   ========================================= */
+
+// 確保網頁載入後才綁定事件，解決「按不進去」的問題
+window.onload = function() {
+    const startBtn = document.getElementById('start-btn');
+    if (startBtn) {
+        startBtn.onclick = startGameWithLogin;
+    }
+
+    // 綁定手機控制按鈕
+    if (document.getElementById('btn-left')) {
+        document.getElementById('btn-left').onclick = moveLeft;
+        document.getElementById('btn-right').onclick = moveRight;
+        document.getElementById('btn-drop').onclick = dropClaw;
+    }
+
+    // 綁定鍵盤事件 
+    document.addEventListener('keydown', (e) => {
+        if (document.activeElement.tagName === 'INPUT') return;
+        if (isGameOver || !playerName) return;
+        
+        if (e.code === 'ArrowLeft') moveLeft();
+        if (e.code === 'ArrowRight') moveRight();
+        if (e.code === 'Space') {
+            e.preventDefault(); 
+            dropClaw();
+        }
+    });
+};
+
+function startGameWithLogin() {
+    const input = document.getElementById('player-name');
+    if (!input.value.trim()) return alert("請輸入姓名！");
+    playerName = input.value;
+    document.getElementById('user-display').innerText = "挑戰者：" + playerName;
+    document.getElementById('login-overlay').style.display = 'none';
+    restartGame();
+}
+
+function restartGame() {
+    score = 0;
+    timeLeft = 90; 
+    isGameOver = false;
+    isDropping = false;
+    clawX = 250;
+    availableQuestions = [...antiFraudPool]; [cite: 51]
+    
+    scoreText.innerText = "0";
+    timerText.innerText = "90";
+    claw.style.left = "250px";
+    claw.style.top = "0px";
+    
+    gameOverOverlay.style.display = 'none';
+    winOverlay.style.display = 'none';
+    
+    initGame();
+    startTimer();
+}
+
+function startTimer() {
+    clearInterval(gameTimer);
+    gameTimer = setInterval(() => {
+        if (!isGameOver) {
+            timeLeft--;
+            timerText.innerText = timeLeft;
+            if (timeLeft <= 0) endGame(); [cite: 45]
+        }
+    }, 1000);
+}
+
+/* =========================================
+   3. 選項生成 (防重疊演算法)
+   ========================================= */
+
+function initGame() {
+    itemsArea.innerHTML = '';
+    if (availableQuestions.length === 0) availableQuestions = [...antiFraudPool]; [cite: 53]
+    
+    const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+    const currentLevel = availableQuestions[randomIndex];
+    availableQuestions.splice(randomIndex, 1);
+    
+    targetText.innerText = currentLevel.q;
+    currentCorrectAnswer = currentLevel.a;
+
+    const placedItems = [];
+    currentLevel.options.forEach((text) => {
+        const item = document.createElement('div');
+        item.className = 'item';
+        item.innerText = text;
+        itemsArea.appendChild(item);
+
+        let randomLeft, randomBottom, attempts = 0;
+        let isOverlapping;
+        
+        do {
+            isOverlapping = false;
+            // 隨機位置計算
+            randomLeft = Math.floor(Math.random() * (itemsArea.offsetWidth - 120)) + 20;
+            randomBottom = Math.floor(Math.random() * 150) + 40; 
+
+            // 檢查重疊 [cite: 57]
+            for (let other of placedItems) {
+                const hSpace = 115; // 水平間距
+                const vSpace = 60;  // 垂直間距
+                if (Math.abs(randomLeft - other.left) < hSpace && 
+                    Math.abs(randomBottom - other.bottom) < vSpace) {
+                    isOverlapping = true;
+                    break;
+                }
+            }
+            attempts++;
+        } while (isOverlapping && attempts < 100);
+
+        placedItems.push({ left: randomLeft, bottom: randomBottom });
+        item.style.left = randomLeft + 'px';
+        item.style.bottom = randomBottom + 'px';
+    });
+}
+
+/* =========================================
+   4. 操作動作 (移動與抓取)
+   ========================================= */
+
 function moveLeft() {
     if (!isDropping && !isGameOver && playerName) {
-        if (clawX > 20) {
+        if (clawX > 30) {
             clawX -= 30;
             claw.style.left = clawX + 'px';
         }
@@ -42,7 +171,7 @@ function moveLeft() {
 
 function moveRight() {
     if (!isDropping && !isGameOver && playerName) {
-        if (clawX < 430) {
+        if (clawX < 470) {
             clawX += 30;
             claw.style.left = clawX + 'px';
         }
@@ -54,13 +183,13 @@ function dropClaw() {
     isDropping = true;
     
     const items = document.querySelectorAll('.item');
-    const maxDropDepth = 280; 
+    const maxDropDepth = 380; 
     let caughtItem = null;
     let highestY = 999;
 
     items.forEach(item => {
         const itemCenterX = item.offsetLeft + (item.offsetWidth / 2);
-        if (Math.abs(clawX + 25 - itemCenterX) < 45) {
+        if (Math.abs(clawX + 30 - itemCenterX) < 50) { [cite: 63]
             if (item.offsetTop < highestY) {
                 highestY = item.offsetTop;
                 caughtItem = item;
@@ -68,7 +197,7 @@ function dropClaw() {
         }
     });
 
-    const stopDepth = caughtItem ? (highestY - 5) : maxDropDepth;
+    const stopDepth = caughtItem ? (highestY - 5) : maxDropDepth; [cite: 65]
     claw.style.top = stopDepth + "px";
 
     setTimeout(() => {
@@ -82,142 +211,43 @@ function dropClaw() {
                 if (caughtItem.innerText === currentCorrectAnswer) {
                     score += 10;
                     scoreText.innerText = score;
-                    if (score >= 100) winGame();
-                    else { timeLeft += 5; timerText.innerText = timeLeft; setTimeout(initGame, 500); }
+                    if (score >= 100) winGame(); [cite: 67, 68]
+                    else {
+                        timeLeft += 5;
+                        timerText.innerText = timeLeft;
+                        setTimeout(initGame, 500);
+                    }
                 } else {
-                    alert("❌ 答錯了！");
+                    alert("❌ 答錯了！選項移除。"); [cite: 70]
                     caughtItem.remove();
                 }
             }, 100);
         }
+        
         claw.style.top = "0px";
-        setTimeout(() => isDropping = false, 700);
+        setTimeout(() => { isDropping = false; }, 700);
     }, 750);
 }
 
-// 綁定事件 (重要：確保網頁載入後執行)
-// ... (保留上方變數定義如 itemsArea, claw, antiFraudPool 等) ...
+/* =========================================
+   5. 結算功能
+   ========================================= */
 
-window.onload = function() {
-    // 綁定登入按鈕
-    const startBtn = document.getElementById('start-btn');
-    if(startBtn) {
-        startBtn.onclick = startGameWithLogin;
-    }
-
-    // 綁定手機控制按鈕
-    document.getElementById('btn-left').onclick = moveLeft;
-    document.getElementById('btn-right').onclick = moveRight;
-    document.getElementById('btn-drop').onclick = dropClaw;
-
-    // 綁定鍵盤
-    document.addEventListener('keydown', function(e) {
-        if (document.activeElement.tagName === 'INPUT') return;
-        if (isGameOver || !playerName) return;
-        if (e.code === 'ArrowLeft') moveLeft();
-        if (e.code === 'ArrowRight') moveRight();
-        if (e.code === 'Space') {
-            e.preventDefault();
-            dropClaw();
-        }
-    });
-};
-
-function startGameWithLogin() {
-    const input = document.getElementById('player-name'); [cite: 113, 114]
-    const name = input.value.trim();
-    if (!name) {
-        alert("請輸入挑戰者姓名！"); [cite: 114]
-        return;
-    }
-    playerName = name;
-    document.getElementById('user-display').innerText = "挑戰者：" + playerName; [cite: 115]
-    document.getElementById('login-overlay').style.display = 'none'; [cite: 115]
-    restartGame(); [cite: 115]
-}
-
-// ... (後續 restartGame, initGame, dropClaw 函式請保持不變) ...
-
-function restartGame() {
-    score = 0; timeLeft = 90; isGameOver = false; isDropping = false; clawX = 225;
-    availableQuestions = [...antiFraudPool];
-    scoreText.innerText = "0";
-    timerText.innerText = "90";
-    claw.style.left = "225px";
-    claw.style.top = "0px";
-    gameOverOverlay.style.display = 'none';
-    winOverlay.style.display = 'none';
-    initGame();
-    startTimer();
-}
-
-function startTimer() {
+function endGame() {
+    isGameOver = true;
     clearInterval(gameTimer);
-    gameTimer = setInterval(() => {
-        if (!isGameOver) {
-            timeLeft--;
-            timerText.innerText = timeLeft;
-            if (timeLeft <= 0) endGame();
-        }
-    }, 1000);
+    gameOverOverlay.style.display = 'flex';
+    finalScoreText.innerText = score;
 }
 
-function initGame() {
-    itemsArea.innerHTML = '';
-    if (availableQuestions.length === 0) {
-        availableQuestions = [...antiFraudPool];
+function winGame() {
+    isGameOver = true;
+    clearInterval(gameTimer);
+    winOverlay.style.display = 'flex';
+}
+
+function confirmReset() {
+    if (confirm("確定要重新開始遊戲嗎？")) {
+        restartGame();
     }
-
-    const randomIndex = Math.floor(Math.random() * availableQuestions.length);
-    const currentLevel = availableQuestions[randomIndex];
-    availableQuestions.splice(randomIndex, 1);
-
-    targetText.innerHTML = currentLevel.q;
-    currentCorrectAnswer = currentLevel.a;
-    
-    const placedItems = [];
-    currentLevel.options.forEach((text) => {
-        const item = document.createElement('div');
-        item.className = 'item';
-        item.innerText = text;
-        itemsArea.appendChild(item);
-
-        // 預設選項球的寬度與高度估算值
-        const itemWidth = 120; 
-        const itemHeight = 45;
-
-        let randomLeft, randomBottom, attempts = 0;
-        let isOverlapping;
-
-        do {
-            isOverlapping = false;
-            // 隨機生成位置，並確保不超出機台邊框 (留 20px 邊距)
-            randomLeft = Math.floor(Math.random() * (itemsArea.offsetWidth - itemWidth - 40)) + 20;
-            randomBottom = Math.floor(Math.random() * 180) + 50; 
-
-            // 【核心優化】加強重疊判定間距
-            for (let other of placedItems) {
-                // 設定安全間距：左右 110px，上下 60px
-                const horizontalSpacing = 110; 
-                const verticalSpacing = 60;    
-                
-                if (Math.abs(randomLeft - other.left) < horizontalSpacing && 
-                    Math.abs(randomBottom - other.bottom) < verticalSpacing) {
-                    isOverlapping = true;
-                    break;
-                }
-            }
-            attempts++;
-            // 嘗試 100 次若還是重疊就強制放置，避免無窮迴圈
-            if (attempts > 100) break; 
-        } while (isOverlapping);
-
-        placedItems.push({ left: randomLeft, bottom: randomBottom });
-        item.style.left = randomLeft + 'px';
-        item.style.bottom = randomBottom + 'px';
-    });
 }
-
-function endGame() { isGameOver = true; clearInterval(gameTimer); gameOverOverlay.style.display = 'flex'; finalScoreText.innerText = score; }
-function winGame() { isGameOver = true; clearInterval(gameTimer); winOverlay.style.display = 'flex'; }
-function confirmReset() { if (confirm("確定重新開始？")) restartGame(); }
