@@ -8,20 +8,20 @@ const winOverlay = document.getElementById('win-overlay');
 const finalScoreText = document.getElementById('final-score');
 
 let playerName = "";
-let clawX = 250;
+let clawX = 225;
 let score = 0;
-let timeLeft = 60; 
+let timeLeft = 90; 
 let isDropping = false;
 let isGameOver = false;
 let gameTimer = null;
 let currentCorrectAnswer = "";
+let availableQuestions = [];
 
-// 原始題庫
 const antiFraudPool = [
     { q: "消費者服務專線的電話是？", options: ["📞 1950", "📞 110", "📞 119", "📞 123"], a: "📞 1950" },
     { q: "以下哪些是常見的詐騙手法？", options: ["💌 網路交友", "📈 假投資", "✅ 以上皆是", "🎁 領點數"], a: "✅ 以上皆是" },
-    { q: "收到自稱檢察官電話說要監管帳戶？", options: ["☎️ 撥打 165", "💰 匯款給他", "🏦 操作 ATM", ], a: "☎️ 撥打 165" },
-    { q: "賄選檢舉專線為", options: ["📞 0800-024-099#4", "📞 2936-5522", "📞 2882-5252", "📞 119"], a: "📞 0800-024-099#4" },
+    { q: "收到自稱檢察官電話說要監管帳戶？", options: ["☎️ 撥打 165", "💰 匯款給他", "🏦 操作 ATM", "📱 不予理會"], a: "☎️ 撥打 165" },
+    { q: "賄選檢舉專線為", options: ["📞 0800-024-099#4", "📞 113", "📞 2882-5252", "📞 119"], a: "📞 0800-024-099#4" },
     { q: "公務員赴大陸事後返臺上班多久內應填寫「返臺通報表」？", options: ["一星期內", "不用填(ﾟ∀。)", "一年後", "一年內"], a: "一星期內" },
     { q: "透明晶質獎的執行機關是？", options: ["廉政署", "數發部", "文山區公所", "體育部"], a: "廉政署" },
     { q: "透明晶質獎舉辦目的是？", options: ["推動廉能治理", "激勵行政團隊", "樹立標竿學習", "以上皆是"], a: "以上皆是" },
@@ -30,20 +30,26 @@ const antiFraudPool = [
     { q: "公益揭弊者保護法的「揭弊的人」保護對象為？", options: ["政府機關（構）", "國營事業", "受政府控制之事業團體", "以上皆是"], a: "以上皆是" }
 ];
 
-// 【關鍵修改 1】定義剩餘題庫副本
-let availableQuestions = [];
-
 function startGameWithLogin() {
     const input = document.getElementById('player-name');
-    if (input.value.trim() === "") {
-        alert("請輸入挑戰者姓名！");
-        return;
-    }
+    if (!input.value.trim()) return alert("請輸入姓名！");
     playerName = input.value;
     document.getElementById('user-display').innerText = "挑戰者：" + playerName;
-    document.getElementById('winner-name-display').innerText = playerName;
     document.getElementById('login-overlay').style.display = 'none';
     restartGame();
+}
+
+function restartGame() {
+    score = 0; timeLeft = 90; isGameOver = false; isDropping = false; clawX = 225;
+    availableQuestions = [...antiFraudPool];
+    scoreText.innerText = "0";
+    timerText.innerText = "90";
+    claw.style.left = "225px";
+    claw.style.top = "0px";
+    gameOverOverlay.style.display = 'none';
+    winOverlay.style.display = 'none';
+    initGame();
+    startTimer();
 }
 
 function startTimer() {
@@ -57,60 +63,15 @@ function startTimer() {
     }, 1000);
 }
 
-function endGame() {
-    isGameOver = true;
-    clearInterval(gameTimer);
-    gameOverOverlay.style.display = 'flex';
-    finalScoreText.innerText = score;
-}
-
-function winGame() {
-    isGameOver = true;
-    clearInterval(gameTimer);
-    winOverlay.style.display = 'flex';
-}
-
-function confirmReset() {
-    if (isGameOver || !playerName) return;
-    if (confirm("確定要重頭開始遊戲嗎？")) {
-        restartGame();
-    }
-}
-
-function restartGame() {
-    score = 0;
-    timeLeft = 90; 
-    isGameOver = false;
-    isDropping = false;
-    clawX = 250;
-    
-    // 【關鍵修改 2】重新開始時重置題庫
-    availableQuestions = [...antiFraudPool]; 
-    
-    scoreText.innerText = "0";
-    timerText.innerText = "60";
-    claw.style.left = "250px";
-    claw.style.top = "0px";
-    gameOverOverlay.style.display = 'none';
-    winOverlay.style.display = 'none';
-    
-    initGame();
-    startTimer();
-}
-
 function initGame() {
     itemsArea.innerHTML = '';
-    if (availableQuestions.length === 0) {
-        availableQuestions = [...antiFraudPool];
-    }
-
+    if (availableQuestions.length === 0) availableQuestions = [...antiFraudPool];
     const randomIndex = Math.floor(Math.random() * availableQuestions.length);
     const currentLevel = availableQuestions[randomIndex];
     availableQuestions.splice(randomIndex, 1);
-
-    targetText.innerHTML = currentLevel.q;
+    targetText.innerText = currentLevel.q;
     currentCorrectAnswer = currentLevel.a;
-    
+
     const placedItems = [];
     currentLevel.options.forEach((text) => {
         const item = document.createElement('div');
@@ -118,34 +79,19 @@ function initGame() {
         item.innerText = text;
         itemsArea.appendChild(item);
 
-        // 取得按鈕實際寬度，若尚未渲染則預設為 120px
-        const itemWidth = 120; 
-        const itemHeight = 45;
-
         let randomLeft, randomBottom, attempts = 0;
         let isOverlapping;
-
         do {
             isOverlapping = false;
-            // 限制隨機範圍，確保不會超出邊框
-            randomLeft = Math.floor(Math.random() * (itemsArea.offsetWidth - itemWidth - 40)) + 20;
-            randomBottom = Math.floor(Math.random() * 180) + 50; 
-
-            // 【核心優化】加強重疊判定間距
+            randomLeft = Math.floor(Math.random() * (itemsArea.offsetWidth - 110)) + 15;
+            randomBottom = Math.floor(Math.random() * 120) + 40;
             for (let other of placedItems) {
-                const horizontalSpacing = 110; // 左右間距
-                const verticalSpacing = 60;    // 上下間距
-                
-                if (Math.abs(randomLeft - other.left) < horizontalSpacing && 
-                    Math.abs(randomBottom - other.bottom) < verticalSpacing) {
-                    isOverlapping = true;
-                    break;
+                if (Math.abs(randomLeft - other.left) < 110 && Math.abs(randomBottom - other.bottom) < 55) {
+                    isOverlapping = true; break;
                 }
             }
             attempts++;
-            // 嘗試 100 次若還是重疊就強制放置，避免無窮迴圈
-            if (attempts > 100) break; 
-        } while (isOverlapping);
+        } while (isOverlapping && attempts < 100);
 
         placedItems.push({ left: randomLeft, bottom: randomBottom });
         item.style.left = randomLeft + 'px';
@@ -153,29 +99,17 @@ function initGame() {
     });
 }
 
-window.addEventListener('keydown', (e) => {
-    if (isDropping || isGameOver || !playerName) return;
-    if (e.key === "ArrowLeft" && clawX > 40) clawX -= 25;
-    if (e.key === "ArrowRight" && clawX < 480) clawX += 25;
-    if (e.key === " " || e.code === "Space") {
-        e.preventDefault(); 
-        dropClaw(); 
-    }
-    claw.style.left = clawX + 'px';
-});
-
 function dropClaw() {
     if (isDropping || isGameOver) return;
     isDropping = true;
     const items = document.querySelectorAll('.item');
-    const maxDropDepth = 430; 
+    const maxDropDepth = 280; // 適應縮小後的機台
     let caughtItem = null;
-    let highestY = 999; 
+    let highestY = 999;
 
     items.forEach(item => {
-        const itemCenterX = item.offsetLeft + 40; 
-        const distX = Math.abs(clawX - itemCenterX);
-        if (distX < 50) { 
+        const itemCenterX = item.offsetLeft + (item.offsetWidth / 2);
+        if (Math.abs(clawX + 25 - itemCenterX) < 45) {
             if (item.offsetTop < highestY) {
                 highestY = item.offsetTop;
                 caughtItem = item;
@@ -190,56 +124,25 @@ function dropClaw() {
         if (caughtItem) {
             caughtItem.style.transition = "top 0.7s";
             caughtItem.style.bottom = "auto";
-            caughtItem.style.top = (stopDepth + 35) + "px";
-            
+            caughtItem.style.top = (stopDepth + 30) + "px";
             setTimeout(() => {
-                caughtItem.style.top = "-100px"; 
+                caughtItem.style.top = "-100px";
                 if (caughtItem.innerText === currentCorrectAnswer) {
-                    score += 10; 
-                    scoreText.innerText = score;
-                    if (score >= 100) { 
-                        winGame();
-                    } else {
-                        timeLeft += 8; 
-                        timerText.innerText = timeLeft;
-                        setTimeout(() => {
-                            initGame();
-                        }, 500);
-                    }
-                } else {
-                    alert("⚠️ 答錯！選項移除。"); 
-                    caughtItem.remove(); 
-                }
-            }, 50);
+                    score += 10; scoreText.innerText = score;
+                    if (score >= 100) winGame();
+                    else { timeLeft += 5; timerText.innerText = timeLeft; setTimeout(initGame, 500); }
+                } else { alert("❌ 答錯了！"); caughtItem.remove(); }
+            }, 100);
         }
         claw.style.top = "0px";
-        setTimeout(() => { isDropping = false; }, 700);
+        setTimeout(() => isDropping = false, 700);
     }, 750);
 }
 
+// 綁定按鈕
+document.getElementById('btn-left').onclick = () => { if(!isDropping && clawX > 20) { clawX -= 30; claw.style.left = clawX + 'px'; }};
+document.getElementById('btn-right').onclick = () => { if(!isDropping && clawX < 430) { clawX += 30; claw.style.left = clawX + 'px'; }};
+document.getElementById('btn-drop').onclick = dropClaw;
 
-
-// 在 JS 檔案最後方加入
-const btnLeft = document.getElementById('btn-left');
-const btnRight = document.getElementById('btn-right');
-const btnDrop = document.getElementById('btn-drop');
-
-// 左移按鈕
-btnLeft.addEventListener('click', () => {
-    if (isDropping || isGameOver || !playerName) return;
-    if (clawX > 40) clawX -= 25;
-    claw.style.left = clawX + 'px';
-});
-
-// 右移按鈕
-btnRight.addEventListener('click', () => {
-    if (isDropping || isGameOver || !playerName) return;
-    if (clawX < 480) clawX += 25;
-    claw.style.left = clawX + 'px';
-});
-
-// 抓取按鈕
-btnDrop.addEventListener('click', () => {
-    if (isDropping || isGameOver || !playerName) return;
-    dropClaw();
-});
+function endGame() { isGameOver = true; clearInterval(gameTimer); gameOverOverlay.style.display = 'flex'; finalScoreText.innerText = score; }
+function winGame() { isGameOver = true; clearInterval(gameTimer); winOverlay.style.display = 'flex'; }
