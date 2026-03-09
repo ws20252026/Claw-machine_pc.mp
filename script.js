@@ -96,37 +96,47 @@ function dropClaw() {
 }
 
 // 綁定事件 (重要：確保網頁載入後執行)
+// ... (保留上方變數定義如 itemsArea, claw, antiFraudPool 等) ...
+
 window.onload = function() {
-    // 綁定手機按鈕
+    // 綁定登入按鈕
+    const startBtn = document.getElementById('start-btn');
+    if(startBtn) {
+        startBtn.onclick = startGameWithLogin;
+    }
+
+    // 綁定手機控制按鈕
     document.getElementById('btn-left').onclick = moveLeft;
     document.getElementById('btn-right').onclick = moveRight;
     document.getElementById('btn-drop').onclick = dropClaw;
 
-    // 綁定鍵盤事件
+    // 綁定鍵盤
     document.addEventListener('keydown', function(e) {
-        // 如果正在輸入名字，不觸發遊戲控制
         if (document.activeElement.tagName === 'INPUT') return;
-
         if (isGameOver || !playerName) return;
-
         if (e.code === 'ArrowLeft') moveLeft();
         if (e.code === 'ArrowRight') moveRight();
         if (e.code === 'Space') {
-            e.preventDefault(); // 防止網頁捲動
+            e.preventDefault();
             dropClaw();
         }
     });
 };
 
-// 遊戲狀態控制
 function startGameWithLogin() {
-    const input = document.getElementById('player-name');
-    if (!input.value.trim()) return alert("請輸入姓名！");
-    playerName = input.value;
-    document.getElementById('user-display').innerText = "挑戰者：" + playerName;
-    document.getElementById('login-overlay').style.display = 'none';
-    restartGame();
+    const input = document.getElementById('player-name'); [cite: 113, 114]
+    const name = input.value.trim();
+    if (!name) {
+        alert("請輸入挑戰者姓名！"); [cite: 114]
+        return;
+    }
+    playerName = name;
+    document.getElementById('user-display').innerText = "挑戰者：" + playerName; [cite: 115]
+    document.getElementById('login-overlay').style.display = 'none'; [cite: 115]
+    restartGame(); [cite: 115]
 }
+
+// ... (後續 restartGame, initGame, dropClaw 函式請保持不變) ...
 
 function restartGame() {
     score = 0; timeLeft = 90; isGameOver = false; isDropping = false; clawX = 225;
