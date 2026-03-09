@@ -20,7 +20,7 @@ let availableQuestions = [];
 const antiFraudPool = [
     { q: "消費者服務專線的電話是？", options: ["📞 1950", "📞 110", "📞 119", "📞 123"], a: "📞 1950" },
     { q: "以下哪些是常見的詐騙手法？", options: ["💌 網路交友", "📈 假投資", "✅ 以上皆是", "🎁 領點數"], a: "✅ 以上皆是" },
-    { q: "收到自稱檢察官電話說要監管帳戶？", options: ["☎️ 撥打 165", "💰 匯款給他", "🏦 操作 ATM", "📱 不予理會"], a: "☎️ 撥打 165" },
+    { q: "收到自稱檢察官電話說要監管帳戶？", options: ["☎️ 撥打 165", "💰 匯款給他", "🏦 操作 ATM], a: "☎️ 撥打 165" },
     { q: "賄選檢舉專線為", options: ["📞 0800-024-099#4", "📞 113", "📞 2882-5252", "📞 119"], a: "📞 0800-024-099#4" },
     { q: "公務員赴大陸事後返臺上班多久內應填寫「返臺通報表」？", options: ["一星期內", "不用填(ﾟ∀。)", "一年後", "一年內"], a: "一星期內" },
     { q: "透明晶質獎的執行機關是？", options: ["廉政署", "數發部", "文山區公所", "體育部"], a: "廉政署" },
@@ -154,13 +154,17 @@ function startTimer() {
 
 function initGame() {
     itemsArea.innerHTML = '';
-    if (availableQuestions.length === 0) availableQuestions = [...antiFraudPool];
+    if (availableQuestions.length === 0) {
+        availableQuestions = [...antiFraudPool];
+    }
+
     const randomIndex = Math.floor(Math.random() * availableQuestions.length);
     const currentLevel = availableQuestions[randomIndex];
     availableQuestions.splice(randomIndex, 1);
-    targetText.innerText = currentLevel.q;
-    currentCorrectAnswer = currentLevel.a;
 
+    targetText.innerHTML = currentLevel.q;
+    currentCorrectAnswer = currentLevel.a;
+    
     const placedItems = [];
     currentLevel.options.forEach((text) => {
         const item = document.createElement('div');
@@ -168,19 +172,35 @@ function initGame() {
         item.innerText = text;
         itemsArea.appendChild(item);
 
+        // 預設選項球的寬度與高度估算值
+        const itemWidth = 120; 
+        const itemHeight = 45;
+
         let randomLeft, randomBottom, attempts = 0;
         let isOverlapping;
+
         do {
             isOverlapping = false;
-            randomLeft = Math.floor(Math.random() * (itemsArea.offsetWidth - 110)) + 15;
-            randomBottom = Math.floor(Math.random() * 120) + 40;
+            // 隨機生成位置，並確保不超出機台邊框 (留 20px 邊距)
+            randomLeft = Math.floor(Math.random() * (itemsArea.offsetWidth - itemWidth - 40)) + 20;
+            randomBottom = Math.floor(Math.random() * 180) + 50; 
+
+            // 【核心優化】加強重疊判定間距
             for (let other of placedItems) {
-                if (Math.abs(randomLeft - other.left) < 110 && Math.abs(randomBottom - other.bottom) < 55) {
-                    isOverlapping = true; break;
+                // 設定安全間距：左右 110px，上下 60px
+                const horizontalSpacing = 110; 
+                const verticalSpacing = 60;    
+                
+                if (Math.abs(randomLeft - other.left) < horizontalSpacing && 
+                    Math.abs(randomBottom - other.bottom) < verticalSpacing) {
+                    isOverlapping = true;
+                    break;
                 }
             }
             attempts++;
-        } while (isOverlapping && attempts < 100);
+            // 嘗試 100 次若還是重疊就強制放置，避免無窮迴圈
+            if (attempts > 100) break; 
+        } while (isOverlapping);
 
         placedItems.push({ left: randomLeft, bottom: randomBottom });
         item.style.left = randomLeft + 'px';
