@@ -5,43 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>廉政大夾擊-文山區公所政風室自製</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        /* 手機控制面板 */
-        #mobile-controls {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 12px;
-            margin: 20px auto 10px;
-            width: 90%;
-            max-width: 550px;
-        }
-
-        .ctrl-btn {
-            flex: 1;
-            padding: 15px 0;
-            font-size: 18px;
-            font-weight: bold;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            box-shadow: 0 4px 0 rgba(0,0,0,0.3);
-            background-color: #6c757d;
-            touch-action: manipulation; /* 重要：防止手機連點縮放 */
-            user-select: none;
-        }
-
-        #btn-drop {
-            background-color: #e67e22;
-            flex: 1.5; /* 讓抓取按鈕大一點 */
-        }
-
-        .ctrl-btn:active {
-            transform: translateY(4px);
-            box-shadow: none;
-        }
-    </style>
 </head>
 <body>
 
@@ -68,8 +31,8 @@
     </div>
     
     <div id="status-bar">
-        <div class="timer-box">⏱️ 剩餘時間：<span id="timer">60</span>s</div>
-        <div id="instruction">🎮 任務：夾取正確答案！(鍵盤：可使用⬅️➡️移動及空白鍵下抓，或使用下方按鈕操作。可能會有抓空或誤抓，還請多多包涵多抓幾次)</div>
+        <div class="timer-box">⏱️ <span id="timer">90</span>s</div>
+        <div id="instruction">🎮 任務：(可使用⬅️➡️移動及空白鍵下抓，或使用下方按鈕操作。可能會有抓空或誤抓，還請多多包涵多抓幾次)</div>
     </div>
 
     <div id="machine-wrapper">
@@ -88,7 +51,6 @@
 
             <div id="win-overlay" class="overlay">
                 <h2>🏆 恭喜通關！</h2>
-                <p><span id="winner-name-display" style="color:#2ecc71; font-weight:bold;"></span> 已成為廉政小高手！</p>
                 <button class="action-btn" onclick="restartGame()" style="background: #f1c40f; color: #333;">再玩一次</button>
             </div>
         </div>
@@ -100,32 +62,11 @@
         <button type="button" class="ctrl-btn" id="btn-right">右移 ➡️</button>
     </div>
 
-    <div style="text-align: right; font-size: 13px; color: #bdc3c7; margin-top: 10px; font-weight: bold;">
+    <div style="text-align: right; font-size: 12px; color: #bdc3c7; margin-top: 5px; font-weight: bold;">
         文山區公所政風室自製
     </div>
 </div>
 
 <script src="script.js"></script>
-
-<script>
-    // 確保 script.js 載入後再綁定事件
-    window.onload = function() {
-        document.getElementById('btn-left').onclick = function() {
-            if (typeof isDropping !== 'undefined' && !isDropping && !isGameOver && playerName) {
-                if (clawX > 40) clawX -= 25;
-                document.getElementById('claw-body').style.left = clawX + 'px';
-            }
-        };
-        document.getElementById('btn-right').onclick = function() {
-            if (typeof isDropping !== 'undefined' && !isDropping && !isGameOver && playerName) {
-                if (clawX < 480) clawX += 25;
-                document.getElementById('claw-body').style.left = clawX + 'px';
-            }
-        };
-        document.getElementById('btn-drop').onclick = function() {
-            if (typeof dropClaw === 'function') dropClaw();
-        };
-    };
-</script>
 </body>
 </html>
