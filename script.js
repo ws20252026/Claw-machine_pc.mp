@@ -10,13 +10,14 @@ const finalScoreText = document.getElementById('final-score');
 let playerName = "";
 let clawX = 225;
 let score = 0;
-let timeLeft = 90; 
+let timeLeft = 90; // 已調整為 90 秒
 let isDropping = false;
 let isGameOver = false;
 let gameTimer = null;
 let currentCorrectAnswer = "";
 let availableQuestions = [];
 
+// 題庫資料
 const antiFraudPool = [
     { q: "消費者服務專線的電話是？", options: ["📞 1950", "📞 110", "📞 119", "📞 123"], a: "📞 1950" },
     { q: "以下哪些是常見的詐騙手法？", options: ["💌 網路交友", "📈 假投資", "✅ 以上皆是", "🎁 領點數"], a: "✅ 以上皆是" },
@@ -30,6 +31,7 @@ const antiFraudPool = [
     { q: "公益揭弊者保護法的「揭弊的人」保護對象為？", options: ["政府機關（構）", "國營事業", "受政府控制之事業團體", "以上皆是"], a: "以上皆是" }
 ];
 
+// 登入邏輯
 function startGameWithLogin() {
     const input = document.getElementById('player-name');
     if (!input.value.trim()) return alert("請輸入姓名！");
@@ -39,19 +41,29 @@ function startGameWithLogin() {
     restartGame();
 }
 
+// 重新開始遊戲
 function restartGame() {
-    score = 0; timeLeft = 90; isGameOver = false; isDropping = false; clawX = 225;
+    score = 0;
+    timeLeft = 90; 
+    isGameOver = false;
+    isDropping = false;
+    clawX = 225;
+    
     availableQuestions = [...antiFraudPool];
+    
     scoreText.innerText = "0";
     timerText.innerText = "90";
     claw.style.left = "225px";
     claw.style.top = "0px";
+    
     gameOverOverlay.style.display = 'none';
     winOverlay.style.display = 'none';
+    
     initGame();
     startTimer();
 }
 
+// 計時器邏輯
 function startTimer() {
     clearInterval(gameTimer);
     gameTimer = setInterval(() => {
@@ -63,12 +75,15 @@ function startTimer() {
     }, 1000);
 }
 
+// 初始化題目與選項位置 (防重疊演算法)
 function initGame() {
     itemsArea.innerHTML = '';
     if (availableQuestions.length === 0) availableQuestions = [...antiFraudPool];
+    
     const randomIndex = Math.floor(Math.random() * availableQuestions.length);
     const currentLevel = availableQuestions[randomIndex];
     availableQuestions.splice(randomIndex, 1);
+    
     targetText.innerText = currentLevel.q;
     currentCorrectAnswer = currentLevel.a;
 
@@ -81,13 +96,21 @@ function initGame() {
 
         let randomLeft, randomBottom, attempts = 0;
         let isOverlapping;
+        
         do {
             isOverlapping = false;
-            randomLeft = Math.floor(Math.random() * (itemsArea.offsetWidth - 110)) + 15;
-            randomBottom = Math.floor(Math.random() * 120) + 40;
+            // 隨機生成位置 (適應縮小後的機台)
+            randomLeft = Math.floor(Math.random() * (itemsArea.offsetWidth - 120)) + 15;
+            randomBottom = Math.floor(Math.random() * 120) + 40; 
+
+            // 檢查是否與已放置的選項重疊
             for (let other of placedItems) {
-                if (Math.abs(randomLeft - other.left) < 110 && Math.abs(randomBottom - other.bottom) < 55) {
-                    isOverlapping = true; break;
+                const horizontalSpacing = 110; 
+                const verticalSpacing = 55;
+                if (Math.abs(randomLeft - other.left) < horizontalSpacing && 
+                    Math.abs(randomBottom - other.bottom) < verticalSpacing) {
+                    isOverlapping = true;
+                    break;
                 }
             }
             attempts++;
@@ -99,14 +122,17 @@ function initGame() {
     });
 }
 
+// 抓取動作
 function dropClaw() {
-    if (isDropping || isGameOver) return;
+    if (isDropping || isGameOver || !playerName) return;
     isDropping = true;
+    
     const items = document.querySelectorAll('.item');
-    const maxDropDepth = 280; // 適應縮小後的機台
+    const maxDropDepth = 280; // 適應手機版機台高度
     let caughtItem = null;
     let highestY = 999;
 
+    // 判斷夾子下方的物體
     items.forEach(item => {
         const itemCenterX = item.offsetLeft + (item.offsetWidth / 2);
         if (Math.abs(clawX + 25 - itemCenterX) < 45) {
@@ -120,29 +146,98 @@ function dropClaw() {
     const stopDepth = caughtItem ? (highestY - 5) : maxDropDepth;
     claw.style.top = stopDepth + "px";
 
+    // 抓取上升邏輯
     setTimeout(() => {
         if (caughtItem) {
             caughtItem.style.transition = "top 0.7s";
             caughtItem.style.bottom = "auto";
             caughtItem.style.top = (stopDepth + 30) + "px";
+            
             setTimeout(() => {
                 caughtItem.style.top = "-100px";
                 if (caughtItem.innerText === currentCorrectAnswer) {
-                    score += 10; scoreText.innerText = score;
-                    if (score >= 100) winGame();
-                    else { timeLeft += 5; timerText.innerText = timeLeft; setTimeout(initGame, 500); }
-                } else { alert("❌ 答錯了！"); caughtItem.remove(); }
+                    score += 10;
+                    scoreText.innerText = score;
+                    if (score >= 100) {
+                        winGame();
+                    } else {
+                        timeLeft += 5; // 答對獎勵時間
+                        timerText.innerText = timeLeft;
+                        setTimeout(initGame, 500);
+                    }
+                } else {
+                    alert("❌ 答錯了！該選項消失。");
+                    caughtItem.remove();
+                }
             }, 100);
         }
+        
         claw.style.top = "0px";
-        setTimeout(() => isDropping = false, 700);
+        setTimeout(() => {
+            isDropping = false;
+        }, 700);
     }, 750);
 }
 
-// 綁定按鈕
-document.getElementById('btn-left').onclick = () => { if(!isDropping && clawX > 20) { clawX -= 30; claw.style.left = clawX + 'px'; }};
-document.getElementById('btn-right').onclick = () => { if(!isDropping && clawX < 430) { clawX += 30; claw.style.left = clawX + 'px'; }};
+// --- 控制邏輯：整合按鈕與鍵盤 ---
+
+function moveLeft() {
+    if (!isDropping && !isGameOver && playerName) {
+        if (clawX > 20) {
+            clawX -= 30;
+            claw.style.left = clawX + 'px';
+        }
+    }
+}
+
+function moveRight() {
+    if (!isDropping && !isGameOver && playerName) {
+        if (clawX < 430) {
+            clawX += 30;
+            claw.style.left = clawX + 'px';
+        }
+    }
+}
+
+// 1. 綁定手機實體按鈕
+document.getElementById('btn-left').onclick = moveLeft;
+document.getElementById('btn-right').onclick = moveRight;
 document.getElementById('btn-drop').onclick = dropClaw;
 
-function endGame() { isGameOver = true; clearInterval(gameTimer); gameOverOverlay.style.display = 'flex'; finalScoreText.innerText = score; }
-function winGame() { isGameOver = true; clearInterval(gameTimer); winOverlay.style.display = 'flex'; }
+// 2. 綁定電腦鍵盤
+document.addEventListener('keydown', (e) => {
+    if (isGameOver || !playerName) return;
+    
+    switch(e.code) {
+        case 'ArrowLeft':
+            moveLeft();
+            break;
+        case 'ArrowRight':
+            moveRight();
+            break;
+        case 'Space':
+            e.preventDefault(); // 防止空白鍵捲動網頁
+            dropClaw();
+            break;
+    }
+});
+
+// 遊戲結束處理
+function endGame() {
+    isGameOver = true;
+    clearInterval(gameTimer);
+    gameOverOverlay.style.display = 'flex';
+    finalScoreText.innerText = score;
+}
+
+function winGame() {
+    isGameOver = true;
+    clearInterval(gameTimer);
+    winOverlay.style.display = 'flex';
+}
+
+function confirmReset() {
+    if (confirm("確定要重新開始遊戲嗎？目前的進度將會遺失。")) {
+        restartGame();
+    }
+}
