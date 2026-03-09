@@ -1,14 +1,23 @@
+const itemsArea = document.getElementById('items-area');
+const claw = document.getElementById('claw-body');
+const targetText = document.getElementById('target-answer');
+const scoreText = document.getElementById('score');
+const timerText = document.getElementById('timer');
+const gameOverOverlay = document.getElementById('game-over-overlay');
+const winOverlay = document.getElementById('win-overlay');
+const finalScoreText = document.getElementById('final-score');
+
 let playerName = "";
 let clawX = 225;
 let score = 0;
-let timeLeft = 90;
+let timeLeft = 90; 
 let isDropping = false;
 let isGameOver = false;
+let gameTimer = null;
 let currentCorrectAnswer = "";
-const itemsArea = document.getElementById('items-area');
-const claw = document.getElementById('claw-body');
+let availableQuestions = [];
 
-const questions = [
+const antiFraudPool = [
    { q: "消費者服務專線的電話是？", options: ["📞 1950", "📞 110", "📞 119", "📞 123"], a: "📞 1950" },
     { q: "以下哪些是常見的詐騙手法？", options: ["💌 網路交友", "📈 假投資", "✅ 以上皆是", "🎁 領點數"], a: "✅ 以上皆是" },
     { q: "收到自稱檢察官電話說要監管帳戶？", options: ["☎️ 撥打 165", "💰 匯款給他", "🏦 操作 ATM"], a: "☎️ 撥打 165" },
@@ -22,88 +31,64 @@ const questions = [
 ];
 ];
 
-window.onload = function() {
-    // 登入按鈕綁定
-    document.getElementById('start-btn').onclick = function() {
-        const input = document.getElementById('player-name').value;
-        if(!input.trim()) return alert("請輸入姓名！");
-        playerName = input;
-        document.getElementById('user-display').innerText = "挑戰者：" + playerName;
-        document.getElementById('login-overlay').style.display = 'none';
-        initGame();
-        startTimer();
-    };
+// 核心動作函式
+function moveLeft() {
+    if (!isDropping && !isGameOver && playerName) {
+        if (clawX > 20) {
+            clawX -= 30;
+            claw.style.left = clawX + 'px';
+        }
+    }
+}
 
-    // 手機按鈕綁定
-    document.getElementById('btn-left').onclick = moveLeft;
-    document.getElementById('btn-right').onclick = moveRight;
-    document.getElementById('btn-drop').onclick = dropClaw;
-
-    // 鍵盤監聽
-    document.addEventListener('keydown', (e) => {
-        if(isGameOver || !playerName || document.activeElement.tagName === 'INPUT') return;
-        if(e.code === 'ArrowLeft') moveLeft();
-        if(e.code === 'ArrowRight') moveRight();
-        if(e.code === 'Space') { e.preventDefault(); dropClaw(); }
-    });
-};
-
-function moveLeft() { if(!isDropping && clawX > 20) { clawX -= 30; claw.style.left = clawX + 'px'; } }
-function moveRight() { if(!isDropping && clawX < 430) { clawX += 30; claw.style.left = clawX + 'px'; } }
-
-function initGame() {
-    itemsArea.innerHTML = '';
-    const qData = questions[Math.floor(Math.random() * questions.length)];
-    document.getElementById('target-answer').innerText = qData.q;
-    currentCorrectAnswer = qData.a;
-    const placed = [];
-
-    qData.options.forEach(text => {
-        const item = document.createElement('div');
-        item.className = 'item'; item.innerText = text;
-        itemsArea.appendChild(item);
-
-        let x, y, overlap, attempts = 0;
-        do {
-            overlap = false;
-            x = Math.floor(Math.random() * (itemsArea.offsetWidth - 110)) + 10;
-            y = Math.floor(Math.random() * 120) + 30;
-            // 防重疊判定
-            for(let p of placed) {
-                if(Math.abs(x - p.x) < 120 && Math.abs(y - p.y) < 60) overlap = true;
-            }
-            attempts++;
-        } while(overlap && attempts < 100);
-
-        placed.push({x, y});
-        item.style.left = x + 'px'; item.style.bottom = y + 'px';
-    });
+function moveRight() {
+    if (!isDropping && !isGameOver && playerName) {
+        if (clawX < 430) {
+            clawX += 30;
+            claw.style.left = clawX + 'px';
+        }
+    }
 }
 
 function dropClaw() {
-    if(isDropping || isGameOver) return;
+    if (isDropping || isGameOver || !playerName) return;
     isDropping = true;
+    
     const items = document.querySelectorAll('.item');
-    let target = null;
-    items.forEach(it => {
-        const centerX = it.offsetLeft + (it.offsetWidth/2);
-        if(Math.abs(clawX + 25 - centerX) < 45) target = it;
+    const maxDropDepth = 280; 
+    let caughtItem = null;
+    let highestY = 999;
+
+    items.forEach(item => {
+        const itemCenterX = item.offsetLeft + (item.offsetWidth / 2);
+        if (Math.abs(clawX + 25 - itemCenterX) < 45) {
+            if (item.offsetTop < highestY) {
+                highestY = item.offsetTop;
+                caughtItem = item;
+            }
+        }
     });
 
-    const depth = target ? (target.offsetTop - 5) : 280;
-    claw.style.top = depth + "px";
+    const stopDepth = caughtItem ? (highestY - 5) : maxDropDepth;
+    claw.style.top = stopDepth + "px";
 
     setTimeout(() => {
-        if(target) {
-            target.style.transition = "top 0.7s"; target.style.bottom = "auto";
-            target.style.top = (depth + 30) + "px";
+        if (caughtItem) {
+            caughtItem.style.transition = "top 0.7s";
+            caughtItem.style.bottom = "auto";
+            caughtItem.style.top = (stopDepth + 30) + "px";
+            
             setTimeout(() => {
-                target.style.top = "-100px";
-                if(target.innerText === currentCorrectAnswer) {
-                    score += 10; document.getElementById('score').innerText = score;
-                    if(score >= 100) { isGameOver = true; alert("🏆 恭喜破關！"); }
-                    else { setTimeout(initGame, 500); }
-                } else { alert("❌ 答錯了！"); target.remove(); }
+                caughtItem.style.top = "-100px";
+                if (caughtItem.innerText === currentCorrectAnswer) {
+                    score += 10;
+                    scoreText.innerText = score;
+                    if (score >= 100) winGame();
+                    else { timeLeft += 5; timerText.innerText = timeLeft; setTimeout(initGame, 500); }
+                } else {
+                    alert("❌ 答錯了！");
+                    caughtItem.remove();
+                }
             }, 100);
         }
         claw.style.top = "0px";
@@ -111,15 +96,99 @@ function dropClaw() {
     }, 750);
 }
 
+// 綁定事件 (重要：確保網頁載入後執行)
+window.onload = function() {
+    // 綁定手機按鈕
+    document.getElementById('btn-left').onclick = moveLeft;
+    document.getElementById('btn-right').onclick = moveRight;
+    document.getElementById('btn-drop').onclick = dropClaw;
+
+    // 綁定鍵盤事件
+    document.addEventListener('keydown', function(e) {
+        // 如果正在輸入名字，不觸發遊戲控制
+        if (document.activeElement.tagName === 'INPUT') return;
+
+        if (isGameOver || !playerName) return;
+
+        if (e.code === 'ArrowLeft') moveLeft();
+        if (e.code === 'ArrowRight') moveRight();
+        if (e.code === 'Space') {
+            e.preventDefault(); // 防止網頁捲動
+            dropClaw();
+        }
+    });
+};
+
+// 遊戲狀態控制
+function startGameWithLogin() {
+    const input = document.getElementById('player-name');
+    if (!input.value.trim()) return alert("請輸入姓名！");
+    playerName = input.value;
+    document.getElementById('user-display').innerText = "挑戰者：" + playerName;
+    document.getElementById('login-overlay').style.display = 'none';
+    restartGame();
+}
+
+function restartGame() {
+    score = 0; timeLeft = 90; isGameOver = false; isDropping = false; clawX = 225;
+    availableQuestions = [...antiFraudPool];
+    scoreText.innerText = "0";
+    timerText.innerText = "90";
+    claw.style.left = "225px";
+    claw.style.top = "0px";
+    gameOverOverlay.style.display = 'none';
+    winOverlay.style.display = 'none';
+    initGame();
+    startTimer();
+}
+
 function startTimer() {
-    const timer = setInterval(() => {
-        if(!isGameOver) {
-            timeLeft--; document.getElementById('timer').innerText = timeLeft;
-            if(timeLeft <= 0) {
-                clearInterval(timer); isGameOver = true;
-                document.getElementById('final-score').innerText = score;
-                document.getElementById('game-over-overlay').style.display = 'flex';
-            }
+    clearInterval(gameTimer);
+    gameTimer = setInterval(() => {
+        if (!isGameOver) {
+            timeLeft--;
+            timerText.innerText = timeLeft;
+            if (timeLeft <= 0) endGame();
         }
     }, 1000);
 }
+
+function initGame() {
+    itemsArea.innerHTML = '';
+    if (availableQuestions.length === 0) availableQuestions = [...antiFraudPool];
+    const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+    const currentLevel = availableQuestions[randomIndex];
+    availableQuestions.splice(randomIndex, 1);
+    targetText.innerText = currentLevel.q;
+    currentCorrectAnswer = currentLevel.a;
+
+    const placedItems = [];
+    currentLevel.options.forEach((text) => {
+        const item = document.createElement('div');
+        item.className = 'item';
+        item.innerText = text;
+        itemsArea.appendChild(item);
+
+        let randomLeft, randomBottom, attempts = 0;
+        let isOverlapping;
+        do {
+            isOverlapping = false;
+            randomLeft = Math.floor(Math.random() * (itemsArea.offsetWidth - 110)) + 15;
+            randomBottom = Math.floor(Math.random() * 120) + 40;
+            for (let other of placedItems) {
+                if (Math.abs(randomLeft - other.left) < 110 && Math.abs(randomBottom - other.bottom) < 55) {
+                    isOverlapping = true; break;
+                }
+            }
+            attempts++;
+        } while (isOverlapping && attempts < 100);
+
+        placedItems.push({ left: randomLeft, bottom: randomBottom });
+        item.style.left = randomLeft + 'px';
+        item.style.bottom = randomBottom + 'px';
+    });
+}
+
+function endGame() { isGameOver = true; clearInterval(gameTimer); gameOverOverlay.style.display = 'flex'; finalScoreText.innerText = score; }
+function winGame() { isGameOver = true; clearInterval(gameTimer); winOverlay.style.display = 'flex'; }
+function confirmReset() { if (confirm("確定重新開始？")) restartGame(); }
