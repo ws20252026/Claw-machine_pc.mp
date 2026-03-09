@@ -79,7 +79,7 @@ function confirmReset() {
 
 function restartGame() {
     score = 0;
-    timeLeft = 60; 
+    timeLeft = 90; 
     isGameOver = false;
     isDropping = false;
     clawX = 250;
