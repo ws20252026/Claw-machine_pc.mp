@@ -131,53 +131,51 @@ function startTimer() {
 }
 
 function initGame() {
-    itemsArea.innerHTML = ''; // 清空舊選項
-    
-    // 如果題庫空了，重新抓取一份
-    if (availableQuestions.length === 0) availableQuestions = [...antiFraudPool];
-    
-    // 隨機選題
+    itemsArea.innerHTML = ''; // 清空上一題的選項球
+
+    // --- 【不重複抽題核心邏輯】 ---
+    // 1. 如果可用題庫空了（或是第一次執行），重新從原始題庫抽水
+    if (availableQuestions.length === 0) {
+        availableQuestions = [...antiFraudPool]; // 使用解構賦值複製一份全新的題庫
+    }
+
+    // 2. 隨機決定索引值
     const randomIndex = Math.floor(Math.random() * availableQuestions.length);
-    const currentLevel = availableQuestions[randomIndex];
-    availableQuestions.splice(randomIndex, 1); // 避免重複抽到同一題
     
+    // 3. 取得該題目資料
+    const currentLevel = availableQuestions[randomIndex];
+    
+    // 4. 【關鍵點】使用 splice 將這題從可用陣列中刪除，確保下一輪不會抽到
+    availableQuestions.splice(randomIndex, 1); 
+    // ----------------------------
+
     targetText.innerText = currentLevel.q;
     currentCorrectAnswer = currentLevel.a;
 
-    const placedItems = []; // 紀錄已放置選項的位置
-    currentLevel.options.forEach((text) => {
+    // 定義四個不重疊的象限 (sectors)
+    const sectors = [
+        { minX: 20,  maxX: 150, minY: 110, maxY: 160 }, // 左上
+        { minX: 260, maxX: 400, minY: 110, maxY: 160 }, // 右上
+        { minX: 20,  maxX: 150, minY: 30,  maxY: 70  }, // 左下
+        { minX: 260, maxX: 400, minY: 30,  maxY: 70  }  // 右下
+    ];
+
+    // 打亂象限順序，確保正確答案的位置每次都不同
+    const shuffledSectors = sectors.sort(() => Math.random() - 0.5);
+
+    currentLevel.options.forEach((text, index) => {
         const item = document.createElement('div');
         item.className = 'item';
         item.innerText = text;
         itemsArea.appendChild(item);
 
-        let randomLeft, randomBottom, attempts = 0;
-        let isOverlapping;
-        
-        // 嘗試尋找不重疊的位置，最多嘗試 200 次
-        do {
-            isOverlapping = false;
-            // 計算隨機位置 (扣除選項寬度 120px，確保不出框)
-            randomLeft = Math.floor(Math.random() * (itemsArea.offsetWidth - 130)) + 15;
-            randomBottom = Math.floor(Math.random() * 140) + 40; 
+        // 分配象限
+        const sector = shuffledSectors[index] || { minX: 50, maxX: 400, minY: 30, maxY: 150 };
 
-            // 【核心優化】檢查是否與之前放置的球重疊
-            for (let other of placedItems) {
-                const horizontalGap = Math.abs(randomLeft - other.left);
-                const verticalGap = Math.abs(randomBottom - other.bottom);
-                
-                // 設定安全距離：左右 120 像素，上下 60 像素。機台寬度400，建議數值水平150、垂直70、嘗試500次。
-                if (horizontalGap < 150 && verticalGap < 80) {
-                    isOverlapping = true;
-                    break;
-                }
-            }
-            attempts++;
-            // 嘗試上限設定為 150
-        } while (isOverlapping && attempts < 300);
+        // 在象限內隨機微調一點位置，增加自然感
+        const randomLeft = Math.floor(Math.random() * (sector.maxX - sector.minX)) + sector.minX;
+        const randomBottom = Math.floor(Math.random() * (sector.maxY - sector.minY)) + sector.minY;
 
-        // 存入位置紀錄並套用 CSS
-        placedItems.push({ left: randomLeft, bottom: randomBottom });
         item.style.left = randomLeft + 'px';
         item.style.bottom = randomBottom + 'px';
     });
