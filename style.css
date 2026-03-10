@@ -144,18 +144,19 @@ body {
 
 .item {
     position: absolute;
-    padding: 8px 15px;
+    padding: 6px 10px; /* 稍微縮減內距，適合手機 */
     background: white;
     color: #333;
     border: 2px solid #3498db;
-    border-radius: 18px;
-    font-size: 13px;
+    border-radius: 15px;
+    font-size: 13px; /* 手機字體建議 13-14px */
     font-weight: bold;
     z-index: 5;
-    max-width: 140px;
-    box-sizing: border-box; 
-    word-wrap: break-word;
-    white-space: normal;
+    
+    /* 核心修正：防止超出邊界 */
+    max-width: 120px;       /* 限制最大寬度，避免長句子撐破版面 */
+    box-sizing: border-box; /* 確保邊框不會額外撐大寬度 */
+    word-wrap: break-word;  /* 強制長字換行 */
     text-align: center;
     box-shadow: 2px 3px 6px rgba(0,0,0,0.1);
 }
