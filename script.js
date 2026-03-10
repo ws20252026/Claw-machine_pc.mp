@@ -30,6 +30,8 @@ const antiFraudPool = [
     { q: "公益揭弊者保護法中所稱的「揭弊的人」是指？", options: ["政府機關（構）之人", "國營事業之人", "受政府控制之事業團體之人", "以上皆是"], a: "以上皆是" }
 ];
 
+/* --- 控制功能 --- */
+
 function moveLeft() {
     if (!isDropping && !isGameOver && playerName) {
         if (clawX > 30) { clawX -= 30; claw.style.left = clawX + 'px'; }
@@ -82,6 +84,61 @@ function dropClaw() {
         setTimeout(() => isDropping = false, 700);
     }, 750);
 }
+
+// 💡 新增：更換選項位置 (不換題)
+function shufflePositions() {
+    if (isDropping || isGameOver || !playerName) return;
+    const items = document.querySelectorAll('.item');
+    if (items.length === 0) return;
+
+    const sectors = [
+        { minX: 20,  maxX: 140, minY: 110, maxY: 160 },
+        { minX: 260, maxX: 380, minY: 110, maxY: 160 },
+        { minX: 20,  maxX: 140, minY: 20,  maxY: 70  },
+        { minX: 260, maxX: 380, minY: 20,  maxY: 70  }
+    ];
+
+    const shuffledSectors = sectors.sort(() => Math.random() - 0.5);
+    const placedItems = [];
+
+    items.forEach((item, index) => {
+        const sector = shuffledSectors[index] || { minX: 50, maxX: 350, minY: 20, maxY: 150 };
+        let randomLeft, randomBottom, attempts = 0;
+        let isTooClose;
+
+        do {
+            isTooClose = false;
+            randomLeft = Math.floor(Math.random() * (sector.maxX - sector.minX)) + sector.minX;
+            randomBottom = Math.floor(Math.random() * (sector.maxY - sector.minY)) + sector.minY;
+
+            for (let other of placedItems) {
+                if (Math.abs(randomLeft - other.left) < 180 && Math.abs(randomBottom - other.bottom) < 80) {
+                    isTooClose = true;
+                    break;
+                }
+            }
+            attempts++;
+        } while (isTooClose && attempts < 400);
+
+        placedItems.push({ left: randomLeft, bottom: randomBottom });
+        
+        // 加入過場動畫效果
+        item.style.transition = "all 0.4s ease-out";
+        item.style.left = randomLeft + 'px';
+        item.style.bottom = randomBottom + 'px';
+        
+        // 動畫結束後恢復，避免干擾抓取邏輯
+        setTimeout(() => { item.style.transition = ""; }, 400);
+    });
+}
+
+// 💡 新增：跳下一題
+function skipQuestion() {
+    if (isDropping || isGameOver || !playerName) return;
+    initGame();
+}
+
+/* --- 遊戲核心流程 --- */
 
 window.onload = function() {
     document.getElementById('start-btn').onclick = startGameWithLogin;
@@ -136,21 +193,20 @@ function initGame() {
     
     const randomIndex = Math.floor(Math.random() * availableQuestions.length);
     const currentLevel = availableQuestions[randomIndex];
-    availableQuestions.splice(randomIndex, 1); // 確保不重複抽題
+    availableQuestions.splice(randomIndex, 1); 
     
     targetText.innerText = currentLevel.q;
     currentCorrectAnswer = currentLevel.a;
 
-    // 1. 定義四個象限的範圍 (稍微拉開間距)
     const sectors = [
-        { minX: 20,  maxX: 140, minY: 110, maxY: 160 }, // 左上
-        { minX: 260, maxX: 380, minY: 110, maxY: 160 }, // 右上
-        { minX: 20,  maxX: 140, minY: 20,  maxY: 70  }, // 左下
-        { minX: 260, maxX: 380, minY: 20,  maxY: 70  }  // 右下
+        { minX: 20,  maxX: 140, minY: 110, maxY: 160 },
+        { minX: 260, maxX: 380, minY: 110, maxY: 160 },
+        { minX: 20,  maxX: 140, minY: 20,  maxY: 70  },
+        { minX: 260, maxX: 380, minY: 20,  maxY: 70  }
     ];
 
     const shuffledSectors = sectors.sort(() => Math.random() - 0.5);
-    const placedItems = []; // 用來儲存已放置的座標
+    const placedItems = [];
 
     currentLevel.options.forEach((text, index) => {
         const item = document.createElement('div');
@@ -159,32 +215,23 @@ function initGame() {
         itemsArea.appendChild(item);
 
         const sector = shuffledSectors[index] || { minX: 50, maxX: 350, minY: 20, maxY: 150 };
-
         let randomLeft, randomBottom, attempts = 0;
         let isTooClose;
 
-        // 2. 在象限內進行「安全距離」嘗試
         do {
             isTooClose = false;
             randomLeft = Math.floor(Math.random() * (sector.maxX - sector.minX)) + sector.minX;
             randomBottom = Math.floor(Math.random() * (sector.maxY - sector.minY)) + sector.minY;
 
-            // 檢查與「所有」已放置選項的距離 (包含其他象限的)
             for (let other of placedItems) {
-                const hGap = Math.abs(randomLeft - other.left);
-                const vGap = Math.abs(randomBottom - other.bottom);
-                
-                // 套用您要求的 150/80 安全門檻
-                if (hGap < 180 && vGap < 80) {
+                if (Math.abs(randomLeft - other.left) < 180 && Math.abs(randomBottom - other.bottom) < 80) {
                     isTooClose = true;
                     break;
                 }
             }
             attempts++;
-            // 3. 設定嘗試上限 
         } while (isTooClose && attempts < 400);
 
-        // 存入座標並套用位置
         placedItems.push({ left: randomLeft, bottom: randomBottom });
         item.style.left = randomLeft + 'px';
         item.style.bottom = randomBottom + 'px';
