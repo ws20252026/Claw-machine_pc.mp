@@ -24,10 +24,10 @@ body { margin: 0; background-color: #1a2a3a; display: flex; justify-content: cen
     font-size: 13px; /* 稍微縮小字體 */
     font-weight: bold;
     z-index: 5;
-    max-width: 150px; /* 限制最大寬度，避免擋到別人 */
-    white-space: normal; /* 允許換行 */
-    text-align: center;
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+    max-width: 140px; /* 寬度上限必須小於安全距離 hGap */
+    box-sizing: border-box; 
+    word-wrap: break-word;
+    white-space: normal;
 }
 /* 控制按鈕樣式 */
 #mobile-controls { display: flex; justify-content: center; gap: 10px; margin-top: 15px; width: 100%; box-sizing: border-box; }
