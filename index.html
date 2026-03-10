@@ -2,9 +2,53 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>反詐騙挑戰賽</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>廉能挑戰賽-文山區公所</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* 為了確保按鈕樣式即時生效，建議將此段加入 style.css 或保留於此 */
+        #mobile-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+            padding: 0 10px 10px 10px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .ctrl-btn {
+            flex: 1;
+            max-width: 120px;
+            padding: 18px 0;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+            transition: all 0.1s;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 按鈕顏色設定 */
+        #btn-left, #btn-right {
+            background-color: #6c757d; /* 深灰色 */
+        }
+
+        #btn-drop {
+            background-color: #e67e22; /* 亮橘色，醒目且不與背景衝突 */
+            flex: 1.2;
+        }
+
+        .ctrl-btn:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+    </style>
 </head>
 <body>
 
@@ -31,8 +75,8 @@
     </div>
     
     <div id="status-bar">
-        <div class="timer-box">⏱️ <span id="timer">90</span>s</div>
-        <div id="instruction">🎮 任務：(⬅️ ➡️ 移動，🏗️ 抓取)</div>
+        <div class="timer-box">⏱️ 剩餘時間：<span id="timer">60</span>s</div>
+        <div id="instruction">🎮 任務：夾取正確答案！(可用鍵盤⬅️➡️移動，空白鍵下抓，或按下方按鈕)</div>
     </div>
 
     <div id="machine-wrapper">
@@ -41,6 +85,7 @@
                 <div class="line"></div>
                 <div class="hand"></div>
             </div>
+            
             <div id="items-area"></div>
             
             <div id="game-over-overlay" class="overlay">
@@ -51,22 +96,41 @@
 
             <div id="win-overlay" class="overlay">
                 <h2>🏆 恭喜通關！</h2>
+                <p><span id="winner-name-display" style="color:#2ecc71; font-weight:bold;"></span> 已成為廉政小高手！</p>
+                <p style="font-size: 18px;">獲得滿分 100 分！</p>
                 <button class="action-btn" onclick="restartGame()" style="background: #f1c40f; color: #333;">再玩一次</button>
             </div>
         </div>
     </div>
 
     <div id="mobile-controls">
-        <button type="button" class="ctrl-btn" id="btn-left">⬅️ 左移</button>
-        <button type="button" class="ctrl-btn" id="btn-drop">🏗️ 抓取</button>
-        <button type="button" class="ctrl-btn" id="btn-right">右移 ➡️</button>
+        <button class="ctrl-btn" id="btn-left">⬅️ 左移</button>
+        <button class="ctrl-btn" id="btn-drop">🏗️ 抓取</button>
+        <button class="ctrl-btn" id="btn-right">右移 ➡️</button>
     </div>
 
-    <div style="text-align: right; font-size: 12px; color: #bdc3c7; margin-top: 5px; font-weight: bold;">
+    <div style="text-align: right; font-size: 13px; color: #bdc3c7; margin-top: 10px; font-weight: bold; letter-spacing: 1px;">
         文山區公所政風室自製
     </div>
 </div>
 
 <script src="script.js"></script>
+
+<script>
+    document.getElementById('btn-left').addEventListener('click', () => {
+        if (isDropping || isGameOver || !playerName) return;
+        if (clawX > 40) clawX -= 25;
+        document.getElementById('claw-body').style.left = clawX + 'px';
+    });
+    document.getElementById('btn-right').addEventListener('click', () => {
+        if (isDropping || isGameOver || !playerName) return;
+        if (clawX < 480) clawX += 25;
+        document.getElementById('claw-body').style.left = clawX + 'px';
+    });
+    document.getElementById('btn-drop').addEventListener('click', () => {
+        if (typeof dropClaw === 'function') dropClaw();
+    });
+</script>
+
 </body>
 </html>
