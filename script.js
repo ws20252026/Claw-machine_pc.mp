@@ -131,37 +131,26 @@ function startTimer() {
 }
 
 function initGame() {
-    itemsArea.innerHTML = ''; // 清空上一題的選項球
-
-    // --- 【不重複抽題核心邏輯】 ---
-    // 1. 如果可用題庫空了（或是第一次執行），重新從原始題庫抽水
-    if (availableQuestions.length === 0) {
-        availableQuestions = [...antiFraudPool]; // 使用解構賦值複製一份全新的題庫
-    }
-
-    // 2. 隨機決定索引值
+    itemsArea.innerHTML = '';
+    if (availableQuestions.length === 0) availableQuestions = [...antiFraudPool];
+    
     const randomIndex = Math.floor(Math.random() * availableQuestions.length);
-    
-    // 3. 取得該題目資料
     const currentLevel = availableQuestions[randomIndex];
+    availableQuestions.splice(randomIndex, 1); // 確保不重複抽題
     
-    // 4. 【關鍵點】使用 splice 將這題從可用陣列中刪除，確保下一輪不會抽到
-    availableQuestions.splice(randomIndex, 1); 
-    // ----------------------------
-
     targetText.innerText = currentLevel.q;
     currentCorrectAnswer = currentLevel.a;
 
-    // 定義四個不重疊的象限 (sectors)
+    // 1. 定義四個象限的範圍 (稍微拉開間距)
     const sectors = [
-        { minX: 20,  maxX: 150, minY: 110, maxY: 160 }, // 左上
-        { minX: 260, maxX: 400, minY: 110, maxY: 160 }, // 右上
-        { minX: 20,  maxX: 150, minY: 30,  maxY: 70  }, // 左下
-        { minX: 260, maxX: 400, minY: 30,  maxY: 70  }  // 右下
+        { minX: 20,  maxX: 140, minY: 110, maxY: 160 }, // 左上
+        { minX: 260, maxX: 380, minY: 110, maxY: 160 }, // 右上
+        { minX: 20,  maxX: 140, minY: 20,  maxY: 70  }, // 左下
+        { minX: 260, maxX: 380, minY: 20,  maxY: 70  }  // 右下
     ];
 
-    // 打亂象限順序，確保正確答案的位置每次都不同
     const shuffledSectors = sectors.sort(() => Math.random() - 0.5);
+    const placedItems = []; // 用來儲存已放置的座標
 
     currentLevel.options.forEach((text, index) => {
         const item = document.createElement('div');
@@ -169,13 +158,34 @@ function initGame() {
         item.innerText = text;
         itemsArea.appendChild(item);
 
-        // 分配象限
-        const sector = shuffledSectors[index] || { minX: 50, maxX: 400, minY: 30, maxY: 150 };
+        const sector = shuffledSectors[index] || { minX: 50, maxX: 350, minY: 20, maxY: 150 };
 
-        // 在象限內隨機微調一點位置，增加自然感
-        const randomLeft = Math.floor(Math.random() * (sector.maxX - sector.minX)) + sector.minX;
-        const randomBottom = Math.floor(Math.random() * (sector.maxY - sector.minY)) + sector.minY;
+        let randomLeft, randomBottom, attempts = 0;
+        let isTooClose;
 
+        // 2. 在象限內進行「安全距離」嘗試
+        do {
+            isTooClose = false;
+            randomLeft = Math.floor(Math.random() * (sector.maxX - sector.minX)) + sector.minX;
+            randomBottom = Math.floor(Math.random() * (sector.maxY - sector.minY)) + sector.minY;
+
+            // 檢查與「所有」已放置選項的距離 (包含其他象限的)
+            for (let other of placedItems) {
+                const hGap = Math.abs(randomLeft - other.left);
+                const vGap = Math.abs(randomBottom - other.bottom);
+                
+                // 套用您要求的 150/80 安全門檻
+                if (hGap < 150 && vGap < 80) {
+                    isTooClose = true;
+                    break;
+                }
+            }
+            attempts++;
+            // 3. 設定嘗試上限 150 次
+        } while (isTooClose && attempts < 150);
+
+        // 存入座標並套用位置
+        placedItems.push({ left: randomLeft, bottom: randomBottom });
         item.style.left = randomLeft + 'px';
         item.style.bottom = randomBottom + 'px';
     });
