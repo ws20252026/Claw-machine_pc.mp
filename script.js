@@ -249,3 +249,28 @@ function initGame() {
 function endGame() { isGameOver = true; clearInterval(gameTimer); gameOverOverlay.style.display = 'flex'; finalScoreText.innerText = score; }
 function winGame() { isGameOver = true; clearInterval(gameTimer); winOverlay.style.display = 'flex'; }
 function confirmReset() { if (confirm("確定重新開始？")) restartGame(); }
+
+/* --- 核心修正：iOS 防止雙擊與多指縮放腳本 --- */
+(function() {
+    // 1. 強制禁止多指縮放
+    document.addEventListener('touchstart', function(event) {
+        if (event.touches.length > 1) {
+            event.preventDefault();
+        }
+    }, { passive: false });
+
+    // 2. 強制禁止快速點擊產生的雙擊縮放
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+        const now = (new Date()).getTime();
+        if (now - lastTouchEnd <= 300) {
+            event.preventDefault(); // 攔截 300ms 內的連續點擊手勢
+        }
+        lastTouchEnd = now;
+    }, false);
+    
+    // 3. 攔截 iOS 手勢縮放
+    document.addEventListener('gesturestart', function(event) {
+        event.preventDefault();
+    });
+})();
