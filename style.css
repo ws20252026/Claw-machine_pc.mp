@@ -15,9 +15,13 @@ body { margin: 0; background-color: #1a2a3a; display: flex; justify-content: cen
 .hand::before { left: -6px; border-radius: 0 0 0 10px; transform: rotate(-15deg); border-right: none; }
 .hand::after { right: -6px; border-radius: 0 0 10px 0; transform: rotate(15deg); border-left: none; }
 .item { position: absolute; padding: 6px 12px; background: white; color: #333; border: 2px solid #3498db; border-radius: 20px; font-size: 12px; font-weight: bold; z-index: 5; white-space: nowrap; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
-#mobile-controls { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
-.ctrl-btn { flex: 1; padding: 15px 0; font-size: 16px; font-weight: bold; color: white; border: none; border-radius: 10px; background-color: #5d6d7e; box-shadow: 0 4px 0 rgba(0,0,0,0.3); touch-action: manipulation; }
-#btn-drop { background-color: #e67e22; flex: 1.4; }
+
+/* 控制按鈕樣式 */
+#mobile-controls { display: flex; justify-content: center; gap: 10px; margin-top: 15px; width: 100%; box-sizing: border-box; }
+.ctrl-btn { flex: 1; max-width: 120px; padding: 18px 0; font-size: 18px; font-weight: bold; color: white; border: none; border-radius: 12px; cursor: pointer; background-color: #6c757d; box-shadow: 0 4px 0 rgba(0,0,0,0.3); transition: all 0.1s; user-select: none; -webkit-tap-highlight-color: transparent; }
+#btn-drop { background-color: #e67e22; flex: 1.2; }
+.ctrl-btn:active { transform: translateY(4px); box-shadow: none; }
+
 .overlay, .login-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; border-radius: 10px; }
 .login-card { background: white; padding: 20px; border-radius: 15px; color: #333; width: 260px; }
 .action-btn { padding: 10px 25px; background: #2ecc71; color: white; border: none; border-radius: 25px; font-weight: bold; cursor: pointer; }
