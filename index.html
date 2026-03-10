@@ -33,3 +33,49 @@
     <div id="instruction-bar">
         🎮 任務：移動並夾取正確答案！
     </div>
+
+    <div class="status-row">
+        <button id="shuffle-btn" onclick="shufflePositions()">
+            📦 選項太擠？點我重新排版
+        </button>
+        
+        <div class="timer-display">
+            ⏱️ 剩餘時間：<span id="timer">90</span>s
+        </div>
+    </div>
+   
+    <div id="machine-wrapper">
+        <div id="machine-inner">
+            <div id="claw-body">
+                <div class="line"></div>
+                <div class="hand"></div>
+            </div>
+            <div id="items-area"></div>
+            
+            <div id="game-over-overlay" class="overlay" style="display:none;">
+                <h2>⌛ 時間到！</h2>
+                <p>最終得分：<span id="final-score">0</span></p>
+                <button class="action-btn" onclick="restartGame()">重新挑戰</button>
+            </div>
+
+            <div id="win-overlay" class="overlay" style="display:none;">
+                <h2>🏆 恭喜通關！</h2>
+                <button class="action-btn" onclick="restartGame()">再玩一次</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="mobile-controls">
+        <button class="ctrl-btn" id="btn-left">⬅️ 左移</button>
+        <button class="ctrl-btn" id="btn-drop">🏗️ 抓取</button>
+        <button class="ctrl-btn" id="btn-right">右移 ➡️</button>
+    </div>
+
+    <div class="footer-sign">
+        文山區公所政風室自製
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
