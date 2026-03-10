@@ -41,7 +41,9 @@ function moveLeft() {
 
 function moveRight() {
     if (!isDropping && !isGameOver && playerName) {
-        if (clawX < 420) { clawX += 30; claw.style.left = clawX + 'px'; }
+        // 修正右移極限，避免夾子超出容器寬度
+        const maxRight = itemsArea.clientWidth - 60;
+        if (clawX < maxRight) { clawX += 30; claw.style.left = clawX + 'px'; }
     }
 }
 
@@ -69,7 +71,7 @@ function dropClaw() {
             caughtItem.style.bottom = "auto";
             caughtItem.style.top = (stopDepth + 30) + "px";
             setTimeout(() => {
-                caughtItem.style.top = "-100px";
+                caughtItem.style.top = "-150px";
                 if (caughtItem.innerText === currentCorrectAnswer) {
                     score += 10;
                     scoreText.innerText = score;
@@ -86,54 +88,55 @@ function dropClaw() {
     }, 750);
 }
 
-// 💡 新增：更換選項位置 (不換題)
+// 💡 更新：支援響應式的座標重排
 function shufflePositions() {
     if (isDropping || isGameOver || !playerName) return;
     const items = document.querySelectorAll('.item');
     if (items.length === 0) return;
 
+    const containerWidth = itemsArea.clientWidth;
+    const itemEstimateWidth = 110; // 預估選項寬度
+
     const sectors = [
-        { minX: 20,  maxX: 140, minY: 110, maxY: 160 },
-        { minX: 260, maxX: 380, minY: 110, maxY: 160 },
-        { minX: 20,  maxX: 140, minY: 20,  maxY: 70  },
-        { minX: 260, maxX: 380, minY: 20,  maxY: 70  }
+        { minX: 10, maxX: containerWidth/2 - 20, minY: 110, maxY: 160 },
+        { minX: containerWidth/2 + 20, maxX: containerWidth - 10, minY: 110, maxY: 160 },
+        { minX: 10, maxX: containerWidth/2 - 20, minY: 20, maxY: 70 },
+        { minX: containerWidth/2 + 20, maxX: containerWidth - 10, minY: 20, maxY: 70 }
     ];
 
-    const shuffledSectors = sectors.sort(() => Math.random() - 0.5);
+    const shuffledSectors = [...sectors].sort(() => Math.random() - 0.5);
     const placedItems = [];
 
     items.forEach((item, index) => {
-        const sector = shuffledSectors[index] || { minX: 50, maxX: 350, minY: 20, maxY: 150 };
+        const sector = shuffledSectors[index] || sectors[0];
         let randomLeft, randomBottom, attempts = 0;
         let isTooClose;
 
         do {
             isTooClose = false;
-            randomLeft = Math.floor(Math.random() * (sector.maxX - sector.minX)) + sector.minX;
+            // 確保 maxX 不會讓選項超出右牆
+            const safeMaxX = Math.max(sector.minX + 20, sector.maxX - itemEstimateWidth);
+            randomLeft = Math.floor(Math.random() * (safeMaxX - sector.minX)) + sector.minX;
             randomBottom = Math.floor(Math.random() * (sector.maxY - sector.minY)) + sector.minY;
 
             for (let other of placedItems) {
-                if (Math.abs(randomLeft - other.left) < 180 && Math.abs(randomBottom - other.bottom) < 80) {
+                // 手機版判斷重疊距離縮減，增加成功率
+                if (Math.abs(randomLeft - other.left) < 100 && Math.abs(randomBottom - other.bottom) < 60) {
                     isTooClose = true;
                     break;
                 }
             }
             attempts++;
-        } while (isTooClose && attempts < 400);
+        } while (isTooClose && attempts < 100);
 
         placedItems.push({ left: randomLeft, bottom: randomBottom });
-        
-        // 加入過場動畫效果
         item.style.transition = "all 0.4s ease-out";
         item.style.left = randomLeft + 'px';
         item.style.bottom = randomBottom + 'px';
-        
-        // 動畫結束後恢復，避免干擾抓取邏輯
         setTimeout(() => { item.style.transition = ""; }, 400);
     });
 }
 
-// 💡 新增：跳下一題
 function skipQuestion() {
     if (isDropping || isGameOver || !playerName) return;
     initGame();
@@ -199,14 +202,17 @@ function initGame() {
     targetText.innerText = currentLevel.q;
     currentCorrectAnswer = currentLevel.a;
 
+    const containerWidth = itemsArea.clientWidth;
+    const itemEstimateWidth = 110;
+
     const sectors = [
-        { minX: 20,  maxX: 140, minY: 110, maxY: 160 },
-        { minX: 260, maxX: 380, minY: 110, maxY: 160 },
-        { minX: 20,  maxX: 140, minY: 20,  maxY: 70  },
-        { minX: 260, maxX: 380, minY: 20,  maxY: 70  }
+        { minX: 10, maxX: containerWidth/2 - 20, minY: 110, maxY: 160 },
+        { minX: containerWidth/2 + 20, maxX: containerWidth - 10, minY: 110, maxY: 160 },
+        { minX: 10, maxX: containerWidth/2 - 20, minY: 20, maxY: 70 },
+        { minX: containerWidth/2 + 20, maxX: containerWidth - 10, minY: 20, maxY: 70 }
     ];
 
-    const shuffledSectors = sectors.sort(() => Math.random() - 0.5);
+    const shuffledSectors = [...sectors].sort(() => Math.random() - 0.5);
     const placedItems = [];
 
     currentLevel.options.forEach((text, index) => {
@@ -215,23 +221,24 @@ function initGame() {
         item.innerText = text;
         itemsArea.appendChild(item);
 
-        const sector = shuffledSectors[index] || { minX: 50, maxX: 350, minY: 20, maxY: 150 };
+        const sector = shuffledSectors[index] || sectors[0];
         let randomLeft, randomBottom, attempts = 0;
         let isTooClose;
 
         do {
             isTooClose = false;
-            randomLeft = Math.floor(Math.random() * (sector.maxX - sector.minX)) + sector.minX;
+            const safeMaxX = Math.max(sector.minX + 20, sector.maxX - itemEstimateWidth);
+            randomLeft = Math.floor(Math.random() * (safeMaxX - sector.minX)) + sector.minX;
             randomBottom = Math.floor(Math.random() * (sector.maxY - sector.minY)) + sector.minY;
 
             for (let other of placedItems) {
-                if (Math.abs(randomLeft - other.left) < 180 && Math.abs(randomBottom - other.bottom) < 80) {
+                if (Math.abs(randomLeft - other.left) < 100 && Math.abs(randomBottom - other.bottom) < 60) {
                     isTooClose = true;
                     break;
                 }
             }
             attempts++;
-        } while (isTooClose && attempts < 400);
+        } while (isTooClose && attempts < 100);
 
         placedItems.push({ left: randomLeft, bottom: randomBottom });
         item.style.left = randomLeft + 'px';
