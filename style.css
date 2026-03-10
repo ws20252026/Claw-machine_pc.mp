@@ -14,8 +14,21 @@ body { margin: 0; background-color: #1a2a3a; display: flex; justify-content: cen
 .hand::before, .hand::after { content: ''; position: absolute; bottom: -22px; width: 10px; height: 24px; border: 3px solid #7f8c8d; border-top: none; }
 .hand::before { left: -6px; border-radius: 0 0 0 10px; transform: rotate(-15deg); border-right: none; }
 .hand::after { right: -6px; border-radius: 0 0 10px 0; transform: rotate(15deg); border-left: none; }
-.item { position: absolute; padding: 6px 12px; background: white; color: #333; border: 2px solid #3498db; border-radius: 20px; font-size: 12px; font-weight: bold; z-index: 5; white-space: nowrap; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
-
+.item {
+    position: absolute;
+    padding: 6px 12px;
+    background: white;
+    color: #333;
+    border: 2px solid #3498db;
+    border-radius: 15px;
+    font-size: 13px; /* 稍微縮小字體 */
+    font-weight: bold;
+    z-index: 5;
+    max-width: 150px; /* 限制最大寬度，避免擋到別人 */
+    white-space: normal; /* 允許換行 */
+    text-align: center;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+}
 /* 控制按鈕樣式 */
 #mobile-controls { display: flex; justify-content: center; gap: 10px; margin-top: 15px; width: 100%; box-sizing: border-box; }
 .ctrl-btn { flex: 1; max-width: 120px; padding: 18px 0; font-size: 18px; font-weight: bold; color: white; border: none; border-radius: 12px; cursor: pointer; background-color: #6c757d; box-shadow: 0 4px 0 rgba(0,0,0,0.3); transition: all 0.1s; user-select: none; -webkit-tap-highlight-color: transparent; }
