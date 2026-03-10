@@ -181,8 +181,8 @@ function initGame() {
                 }
             }
             attempts++;
-            // 3. 設定嘗試上限 150 次
-        } while (isTooClose && attempts < 150);
+            // 3. 設定嘗試上限 
+        } while (isTooClose && attempts < 200);
 
         // 存入座標並套用位置
         placedItems.push({ left: randomLeft, bottom: randomBottom });
