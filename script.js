@@ -174,7 +174,7 @@ function initGame() {
             }
             attempts++;
             // 嘗試上限設定為 150
-        } while (isOverlapping && attempts < 150);
+        } while (isOverlapping && attempts < 300);
 
         // 存入位置紀錄並套用 CSS
         placedItems.push({ left: randomLeft, bottom: randomBottom });
