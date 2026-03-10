@@ -60,6 +60,7 @@ body {
 
 #user-display { font-size: 11px; color: #f1c40f; font-weight: bold; }
 
+/* 核心修正：加入 touch-action 停用 iOS 雙擊縮放偵測 */
 #manual-reset-btn {
     background: white;
     color: #333;
@@ -69,6 +70,7 @@ body {
     font-size: 12px;
     cursor: pointer;
     font-weight: bold;
+    touch-action: manipulation;
 }
 
 /* --- 第二排：任務說明 --- */
@@ -89,6 +91,7 @@ body {
     padding: 0 5px;
 }
 
+/* 核心修正：加入 touch-action */
 #shuffle-btn {
     background: #f39c12; 
     color: white; 
@@ -100,6 +103,7 @@ body {
     cursor: pointer; 
     box-shadow: 0 3px #d35400;
     transition: 0.2s;
+    touch-action: manipulation;
 }
 
 #shuffle-btn:active {
@@ -144,33 +148,73 @@ body {
 
 .item {
     position: absolute;
-    padding: 6px 10px; /* 稍微縮減內距，適合手機 */
+    padding: 6px 10px;
     background: white;
     color: #333;
     border: 2px solid #3498db;
     border-radius: 15px;
-    font-size: 13px; /* 手機字體建議 13-14px */
+    font-size: 13px;
     font-weight: bold;
     z-index: 5;
     
-    /* 核心修正：防止超出邊界 */
-    max-width: 120px;       /* 限制最大寬度，避免長句子撐破版面 */
-    box-sizing: border-box; /* 確保邊框不會額外撐大寬度 */
-    word-wrap: break-word;  /* 強制長字換行 */
+    max-width: 120px;
+    box-sizing: border-box;
+    word-wrap: break-word;
     text-align: center;
     box-shadow: 2px 3px 6px rgba(0,0,0,0.1);
+    /* 防止長按選取文字影響遊戲手感 */
+    user-select: none;
+    -webkit-user-select: none;
 }
 
-/* 控制按鈕 */
+/* 核心修正：針對所有控制按鈕停用雙擊縮放，並防止長按選取 */
 #mobile-controls { display: flex; justify-content: center; gap: 10px; margin-top: 15px; }
-.ctrl-btn { flex: 1; max-width: 120px; padding: 16px 0; font-size: 18px; font-weight: bold; color: white; border: none; border-radius: 12px; cursor: pointer; background-color: #6c757d; box-shadow: 0 4px 0 rgba(0,0,0,0.3); transition: all 0.1s; user-select: none; -webkit-tap-highlight-color: transparent; }
+.ctrl-btn { 
+    flex: 1; 
+    max-width: 120px; 
+    padding: 16px 0; 
+    font-size: 18px; 
+    font-weight: bold; 
+    color: white; 
+    border: none; 
+    border-radius: 12px; 
+    cursor: pointer; 
+    background-color: #6c757d; 
+    box-shadow: 0 4px 0 rgba(0,0,0,0.3); 
+    transition: all 0.1s; 
+    user-select: none; 
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent; 
+    touch-action: manipulation; 
+}
 #btn-drop { background-color: #e67e22; flex: 1.2; }
 .ctrl-btn:active { transform: translateY(4px); box-shadow: none; }
 
 /* 覆蓋層 */
 .overlay, .login-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; border-radius: 10px; }
 .login-card { background: white; padding: 20px; border-radius: 15px; color: #333; width: 260px; text-align: center; }
-.action-btn { padding: 10px 25px; background: #2ecc71; color: white; border: none; border-radius: 25px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+
+/* 核心修正：輸入框字體設定為 16px 防止 iOS 點擊時自動放大畫面 */
+#player-name {
+    font-size: 16px;
+    padding: 8px;
+    width: 80%;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.action-btn { 
+    padding: 10px 25px; 
+    background: #2ecc71; 
+    color: white; 
+    border: none; 
+    border-radius: 25px; 
+    font-weight: bold; 
+    cursor: pointer; 
+    margin-top: 10px; 
+    touch-action: manipulation;
+}
 
 .footer-sign {
     text-align: right; 
