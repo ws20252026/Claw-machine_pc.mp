@@ -34,7 +34,23 @@
         <div class="timer-box">⏱️ 剩餘時間：<span id="timer">90</span>s</div>
         <div id="instruction" style="font-size: 12px; margin-top: 5px;">🎮 任務：移動並夾取正確答案！</div>
     </div>
-
+    
+    <div style="text-align: center; margin: 8px 0;">
+        <button id="shuffle-btn" onclick="shufflePositions()" style="
+            background: #f39c12; 
+            color: white; 
+            border: none; 
+            border-radius: 20px; 
+            padding: 6px 15px; 
+            font-size: 14px;
+            font-weight: bold; 
+            cursor: pointer; 
+            box-shadow: 0 4px #d35400;
+            transition: 0.2s;">
+            📦 選項太擠？點我重新排版
+        </button>
+    </div>
+   
     <div id="machine-wrapper">
         <div id="machine-inner">
             <div id="claw-body">
