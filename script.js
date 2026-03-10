@@ -175,14 +175,14 @@ function initGame() {
                 const vGap = Math.abs(randomBottom - other.bottom);
                 
                 // 套用您要求的 150/80 安全門檻
-                if (hGap < 150 && vGap < 80) {
+                if (hGap < 180 && vGap < 80) {
                     isTooClose = true;
                     break;
                 }
             }
             attempts++;
             // 3. 設定嘗試上限 
-        } while (isTooClose && attempts < 200);
+        } while (isTooClose && attempts < 400);
 
         // 存入座標並套用位置
         placedItems.push({ left: randomLeft, bottom: randomBottom });
