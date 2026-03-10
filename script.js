@@ -173,6 +173,7 @@ function initGame() {
                 }
             }
             attempts++;
+            // 嘗試上限設定為 150
         } while (isOverlapping && attempts < 150);
 
         // 存入位置紀錄並套用 CSS
