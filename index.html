@@ -5,6 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>廉能挑戰賽-文山區公所</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* 這裡加入一些結構調整用的 CSS，確保排版準確 */
+        .row-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 5px;
+            margin-bottom: 10px;
+        }
+        .info-centered {
+            text-align: center;
+            margin: 10px 0;
+            font-weight: bold;
+            color: #2c3e50;
+            background: rgba(255,255,255,0.6);
+            padding: 5px;
+            border-radius: 10px;
+        }
+    </style>
 </head>
 <body>
 
@@ -19,36 +38,38 @@
 </div>
 
 <div id="game-container">
-    <div id="header">
-        <div class="question-box">
-            <div>🛡️ 題目：<br><span id="target-answer">載入中...</span></div>
-        </div>
-        <div class="header-right">
-            <div id="user-display">挑戰者：未登錄</div>
-            <div class="score-box">得分：<span id="score">0</span> / 100</div>
-            <button id="manual-reset-btn" onclick="confirmReset()">🔄 重新開始</button>
+    
+    <div class="question-box" style="width: 100%; margin-bottom: 10px;">
+        <div style="text-align: center;">
+            <strong style="color: #2980b9;">🛡️ 挑戰題目</strong><br>
+            <span id="target-answer" style="font-size: 18px; color: #c0392b;">載入中...</span>
         </div>
     </div>
-    
-    <div id="status-bar">
-        <div class="timer-box">⏱️ 剩餘時間：<span id="timer">90</span>s</div>
-        <div id="instruction" style="font-size: 12px; margin-top: 5px;">🎮 任務：移動並夾取正確答案！</div>
+
+    <div class="info-centered">
+        <span id="instruction">🎮 任務：抓取正確答案</span> | 
+        <span id="user-display">挑戰者：未登錄</span> |
+        <span>得分：<span id="score">0</span></span>
     </div>
-    
-    <div style="text-align: center; margin: 8px 0;">
+
+    <div class="row-container">
         <button id="shuffle-btn" onclick="shufflePositions()" style="
             background: #f39c12; 
             color: white; 
             border: none; 
             border-radius: 20px; 
-            padding: 6px 15px; 
-            font-size: 14px;
+            padding: 8px 15px; 
+            font-size: 13px;
             font-weight: bold; 
             cursor: pointer; 
             box-shadow: 0 4px #d35400;
             transition: 0.2s;">
-            📦 選項太擠？點我重新排版
+            📦 選項太擠？
         </button>
+
+        <div class="timer-box" style="margin: 0; padding: 5px 15px; background: white; border-radius: 20px; border: 2px solid #e74c3c; font-weight: bold; color: #e74c3c;">
+            ⏱️ 剩餘：<span id="timer">90</span>s
+        </div>
     </div>
    
     <div id="machine-wrapper">
@@ -78,8 +99,11 @@
         <button class="ctrl-btn" id="btn-right">右移 ➡️</button>
     </div>
 
-    <div style="text-align: right; font-size: 12px; color: #bdc3c7; margin-top: 10px; font-weight: bold;">
-        文山區公所政風室自製
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+        <button id="manual-reset-btn" onclick="confirmReset()" style="font-size: 11px; padding: 5px 10px; background: #95a5a6; color: white; border: none; border-radius: 5px;">🔄 重新開始</button>
+        <div style="font-size: 12px; color: #bdc3c7; font-weight: bold;">
+            文山區公所政風室自製
+        </div>
     </div>
 </div>
 
