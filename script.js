@@ -10,7 +10,7 @@ const finalScoreText = document.getElementById('final-score');
 let playerName = "";
 let clawX = 225;
 let score = 0;
-let timeLeft = 90; 
+let timeLeft = 120; 
 let isDropping = false;
 let isGameOver = false;
 let gameTimer = null;
@@ -169,10 +169,10 @@ function startGameWithLogin() {
 }
 
 function restartGame() {
-    score = 0; timeLeft = 90; isGameOver = false; isDropping = false; clawX = 225;
+    score = 0; timeLeft = 120; isGameOver = false; isDropping = false; clawX = 225;
     availableQuestions = [...antiFraudPool];
     scoreText.innerText = "0";
-    timerText.innerText = "90";
+    timerText.innerText = "120";
     claw.style.left = "225px"; claw.style.top = "0px";
     gameOverOverlay.style.display = 'none';
     winOverlay.style.display = 'none';
