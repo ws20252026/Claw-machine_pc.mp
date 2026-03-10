@@ -129,15 +129,20 @@ function startTimer() {
 }
 
 function initGame() {
-    itemsArea.innerHTML = '';
+    itemsArea.innerHTML = ''; // 清空舊選項
+    
+    // 如果題庫空了，重新抓取一份
     if (availableQuestions.length === 0) availableQuestions = [...antiFraudPool];
+    
+    // 隨機選題
     const randomIndex = Math.floor(Math.random() * availableQuestions.length);
     const currentLevel = availableQuestions[randomIndex];
-    availableQuestions.splice(randomIndex, 1);
+    availableQuestions.splice(randomIndex, 1); // 避免重複抽到同一題
+    
     targetText.innerText = currentLevel.q;
     currentCorrectAnswer = currentLevel.a;
 
-    const placedItems = [];
+    const placedItems = []; // 紀錄已放置選項的位置
     currentLevel.options.forEach((text) => {
         const item = document.createElement('div');
         item.className = 'item';
@@ -146,18 +151,29 @@ function initGame() {
 
         let randomLeft, randomBottom, attempts = 0;
         let isOverlapping;
+        
+        // 嘗試尋找不重疊的位置，最多嘗試 150 次
         do {
             isOverlapping = false;
-            randomLeft = Math.floor(Math.random() * (itemsArea.offsetWidth - 110)) + 15;
-            randomBottom = Math.floor(Math.random() * 120) + 40;
+            // 計算隨機位置 (扣除選項寬度 120px，確保不出框)
+            randomLeft = Math.floor(Math.random() * (itemsArea.offsetWidth - 130)) + 15;
+            randomBottom = Math.floor(Math.random() * 140) + 40; 
+
+            // 【核心優化】檢查是否與之前放置的球重疊
             for (let other of placedItems) {
-                if (Math.abs(randomLeft - other.left) < 110 && Math.abs(randomBottom - other.bottom) < 55) {
-                    isOverlapping = true; break;
+                const horizontalGap = Math.abs(randomLeft - other.left);
+                const verticalGap = Math.abs(randomBottom - other.bottom);
+                
+                // 設定安全距離：左右 120 像素，上下 60 像素
+                if (horizontalGap < 150 && verticalGap < 80) {
+                    isOverlapping = true;
+                    break;
                 }
             }
             attempts++;
-        } while (isOverlapping && attempts < 100);
+        } while (isOverlapping && attempts < 150);
 
+        // 存入位置紀錄並套用 CSS
         placedItems.push({ left: randomLeft, bottom: randomBottom });
         item.style.left = randomLeft + 'px';
         item.style.bottom = randomBottom + 'px';
