@@ -250,21 +250,26 @@ function endGame() { isGameOver = true; clearInterval(gameTimer); gameOverOverla
 function winGame() { isGameOver = true; clearInterval(gameTimer); winOverlay.style.display = 'flex'; }
 function confirmReset() { if (confirm("確定重新開始？")) restartGame(); }
 
-/* --- 核心修正：iOS 防止雙擊與多指縮放腳本 --- */
+/* --- 核心修正：優化後的 iOS 防止縮放腳本（不影響快速點擊） --- */
 (function() {
-    // 1. 強制禁止多指縮放
+    // 1. 依然禁止多指縮放
     document.addEventListener('touchstart', function(event) {
         if (event.touches.length > 1) {
             event.preventDefault();
         }
     }, { passive: false });
 
-    // 2. 強制禁止快速點擊產生的雙擊縮放
+    // 2. 改進雙擊攔截：只針對螢幕背景，不針對「按鈕」
     let lastTouchEnd = 0;
     document.addEventListener('touchend', function(event) {
         const now = (new Date()).getTime();
         if (now - lastTouchEnd <= 300) {
-            event.preventDefault(); // 攔截 300ms 內的連續點擊手勢
+            // 💡 關鍵：如果點擊的目標「不是」按鈕，才攔截縮放
+            if (!event.target.classList.contains('ctrl-btn') && 
+                !event.target.classList.contains('action-btn') &&
+                event.target.tagName !== 'BUTTON') {
+                event.preventDefault();
+            }
         }
         lastTouchEnd = now;
     }, false);
