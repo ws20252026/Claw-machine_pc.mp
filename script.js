@@ -246,8 +246,35 @@ function initGame() {
     });
 }
 
-function endGame() { isGameOver = true; clearInterval(gameTimer); gameOverOverlay.style.display = 'flex'; finalScoreText.innerText = score; }
-function winGame() { isGameOver = true; clearInterval(gameTimer); winOverlay.style.display = 'flex'; }
+function endGame() { 
+    isGameOver = true; 
+    clearInterval(gameTimer); 
+    
+    // 在結束畫面補上挑戰者名字，方便截圖領獎
+    const overText = gameOverOverlay.querySelector('p');
+    overText.innerHTML = `挑戰者：${playerName}<br>最終得分：<span id="final-score">${score}</span><br><br><span style="color:#f1c40f; font-size:14px;">📸 記得截圖此畫面領取獎品！</span>`;
+    
+    gameOverOverlay.style.display = 'flex'; 
+}
+
+function winGame() { 
+    isGameOver = true; 
+    clearInterval(gameTimer); 
+    
+    // 在通關畫面補上挑戰者名字與提示
+    const winContent = winOverlay.querySelector('h2');
+    winContent.innerHTML = `🏆 恭喜通關！<br><span style="font-size:16px;">挑戰者：${playerName}</span>`;
+    
+    // 增加領獎提示
+    const tip = document.createElement('p');
+    tip.innerHTML = `<span style="color:#f1c40f;">📸 截圖此畫面，實用獎品帶回家！</span>`;
+    // 確保不會重複重複新增
+    if (!winOverlay.querySelector('p')) {
+        winOverlay.insertBefore(tip, winOverlay.querySelector('button'));
+    }
+
+    winOverlay.style.display = 'flex'; 
+}
 function confirmReset() { if (confirm("確定重新開始？")) restartGame(); }
 
 /* --- 核心修正：優化後的 iOS 防止縮放腳本（不影響快速點擊） --- */
