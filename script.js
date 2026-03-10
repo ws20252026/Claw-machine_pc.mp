@@ -28,29 +28,21 @@ const antiFraudPool = [
     { q: "電腦開機密碼建議？", options: ["定期更換密碼", "都不要換", "寫在螢幕旁"], a: "定期更換密碼" }
 ];
 
-// 核心動作函式
 function moveLeft() {
     if (!isDropping && !isGameOver && playerName) {
-        if (clawX > 20) {
-            clawX -= 30;
-            claw.style.left = clawX + 'px';
-        }
+        if (clawX > 30) { clawX -= 30; claw.style.left = clawX + 'px'; }
     }
 }
 
 function moveRight() {
     if (!isDropping && !isGameOver && playerName) {
-        if (clawX < 430) {
-            clawX += 30;
-            claw.style.left = clawX + 'px';
-        }
+        if (clawX < 420) { clawX += 30; claw.style.left = clawX + 'px'; }
     }
 }
 
 function dropClaw() {
     if (isDropping || isGameOver || !playerName) return;
     isDropping = true;
-    
     const items = document.querySelectorAll('.item');
     const maxDropDepth = 280; 
     let caughtItem = null;
@@ -59,10 +51,7 @@ function dropClaw() {
     items.forEach(item => {
         const itemCenterX = item.offsetLeft + (item.offsetWidth / 2);
         if (Math.abs(clawX + 25 - itemCenterX) < 45) {
-            if (item.offsetTop < highestY) {
-                highestY = item.offsetTop;
-                caughtItem = item;
-            }
+            if (item.offsetTop < highestY) { highestY = item.offsetTop; caughtItem = item; }
         }
     });
 
@@ -74,7 +63,6 @@ function dropClaw() {
             caughtItem.style.transition = "top 0.7s";
             caughtItem.style.bottom = "auto";
             caughtItem.style.top = (stopDepth + 30) + "px";
-            
             setTimeout(() => {
                 caughtItem.style.top = "-100px";
                 if (caughtItem.innerText === currentCorrectAnswer) {
@@ -93,30 +81,21 @@ function dropClaw() {
     }, 750);
 }
 
-// 綁定事件 (重要：確保網頁載入後執行)
 window.onload = function() {
-    // 綁定手機按鈕
+    document.getElementById('start-btn').onclick = startGameWithLogin;
     document.getElementById('btn-left').onclick = moveLeft;
     document.getElementById('btn-right').onclick = moveRight;
     document.getElementById('btn-drop').onclick = dropClaw;
 
-    // 綁定鍵盤事件
     document.addEventListener('keydown', function(e) {
-        // 如果正在輸入名字，不觸發遊戲控制
         if (document.activeElement.tagName === 'INPUT') return;
-
         if (isGameOver || !playerName) return;
-
         if (e.code === 'ArrowLeft') moveLeft();
         if (e.code === 'ArrowRight') moveRight();
-        if (e.code === 'Space') {
-            e.preventDefault(); // 防止網頁捲動
-            dropClaw();
-        }
+        if (e.code === 'Space') { e.preventDefault(); dropClaw(); }
     });
 };
 
-// 遊戲狀態控制
 function startGameWithLogin() {
     const input = document.getElementById('player-name');
     if (!input.value.trim()) return alert("請輸入姓名！");
@@ -131,8 +110,7 @@ function restartGame() {
     availableQuestions = [...antiFraudPool];
     scoreText.innerText = "0";
     timerText.innerText = "90";
-    claw.style.left = "225px";
-    claw.style.top = "0px";
+    claw.style.left = "225px"; claw.style.top = "0px";
     gameOverOverlay.style.display = 'none';
     winOverlay.style.display = 'none';
     initGame();
