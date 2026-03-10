@@ -154,7 +154,7 @@ function initGame() {
         let randomLeft, randomBottom, attempts = 0;
         let isOverlapping;
         
-        // 嘗試尋找不重疊的位置，最多嘗試 150 次
+        // 嘗試尋找不重疊的位置，最多嘗試 200 次
         do {
             isOverlapping = false;
             // 計算隨機位置 (扣除選項寬度 120px，確保不出框)
@@ -166,7 +166,7 @@ function initGame() {
                 const horizontalGap = Math.abs(randomLeft - other.left);
                 const verticalGap = Math.abs(randomBottom - other.bottom);
                 
-                // 設定安全距離：左右 120 像素，上下 60 像素
+                // 設定安全距離：左右 120 像素，上下 60 像素。機台寬度400，建議數值水平150、垂直70、嘗試500次。
                 if (horizontalGap < 150 && verticalGap < 80) {
                     isOverlapping = true;
                     break;
