@@ -169,7 +169,7 @@ function startGameWithLogin() {
 }
 
 function restartGame() {
-    score = 0; timeLeft = 120; isGameOver = false; isDropping = false; clawX = 225;
+    score = 0; timeLeft = 600; isGameOver = false; isDropping = false; clawX = 225;
     availableQuestions = [...antiFraudPool];
     scoreText.innerText = "0";
     timerText.innerText = "600";
